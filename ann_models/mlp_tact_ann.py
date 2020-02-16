@@ -4,25 +4,23 @@
 # In[1]:
 
 
+
 from datetime import datetime
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
+from learningStats import learningStats
 import zipfile
+from sklearn.metrics import confusion_matrix
 import torch
 from torch import nn
 import numpy as np
 import copy
 
 
-# In[2]:
-
-
-ref_name = 'models_and_stats2/mlp_lstm_multimodal_0'
+ref_name = 'models_and_stats2/mlp_gru_tact_0'
 device = torch.device('cuda:0')
 num_epochs = 2
 
-
-# In[3]:
 
 
 # Dataset definition
@@ -58,8 +56,6 @@ class ViTacDataset(Dataset):
         return self.samples.shape[0]
 
 
-# In[59]:
-
 
 # Dataset and dataLoader instances.
 split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
@@ -71,26 +67,21 @@ for k in range(5):
     
     trainingSet = ViTacDataset(datasetPath = "../bd_data/bd_001_grasp_lift_hold/", 
                                 sampleFile = "../bd_data/bd_data_001s_new_splits/train_" + split_list[k] + ".txt",
-                               modals=2)
+                               modals=0)
     trainLoader = DataLoader(dataset=trainingSet, batch_size=8, shuffle=False, num_workers=8)
     training_loader.append(trainLoader)
     
     testingSet = ViTacDataset(datasetPath = "../bd_data/bd_001_grasp_lift_hold/", 
                                 sampleFile  = "../bd_data/bd_data_001s_new_splits/test_" + split_list[k] + ".txt", 
-                              modals=2)
+                              modals=0)
     testLoader = DataLoader(dataset=testingSet, batch_size=8, shuffle=False, num_workers=8)
     testing_loader.append(testLoader)
-in1, in2, _, label  = trainingSet[0]
-in1.shape, in2.shape
 
 
-# In[60]:
-
-
-class MultiMLP_LSTM(nn.Module):
+class MLP_LSTM(nn.Module):
 
     def __init__(self):
-        super(MultiMLP_LSTM, self).__init__()
+        super(MLP_LSTM, self).__init__()
         self.seq_length = 65
         self.hidden_dim = 30
         self.batch_size = 8
@@ -102,9 +93,7 @@ class MultiMLP_LSTM(nn.Module):
         # Define the output layer
         self.fc = nn.Linear(self.hidden_dim, 20)
         
-        self.fc_tac = nn.Linear(156, 50)
-        self.pool_vis = nn.AvgPool3d((1,5,5), padding=0, stride=(1,7,7))
-        self.fc_vis = nn.Linear(43*50*2, 10)
+        self.fc_mlp = nn.Linear(156, 50)
 
     def init_hidden(self, bs):
         # This is what we'll initialise our hidden state as
@@ -112,20 +101,9 @@ class MultiMLP_LSTM(nn.Module):
         return (torch.zeros(self.num_layers, self.batch_size, self.hidden_dim),
                 torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
 
-    def forward(self, in_tac, in_vis):
+    def forward(self, input_data):
 
-        lstm_tac = self.fc_tac(in_tac)#.permute(0,2,1)
-#         print(in_vis.shape)
-        pool_out = self.pool_vis(in_vis).permute(0,2,1,3,4)
-#         print(pool_out.shape)
-        pool_out = pool_out.reshape([pool_out.shape[0], 65, 43*50*2])
-#         print(pool_out.shape)
-        lstm_vis = self.fc_vis(pool_out)#.permute(0,2,1)
-#         print('h', lstm_vis.shape)
-        lstm_in = torch.cat([lstm_tac, lstm_vis], dim=2).permute(0,2,1)
-#         print(lstm_in.shape)
-        #[8, 2, 65, 50, 43]
-        
+        lstm_in = self.fc_mlp(input_data).permute(0,2,1)
         #print('mlp:', lstm_in.shape, len(lstm_in))
         
         lstm_out, self.hidden = self.lstm(lstm_in)
@@ -138,7 +116,9 @@ class MultiMLP_LSTM(nn.Module):
         return y_pred
 
 
-# In[62]:
+
+
+# In[7]:
 
 
 train_accs = {0:[],1:[],2:[],3:[],4:[]}
@@ -147,38 +127,39 @@ train_loss = {0:[],1:[],2:[],3:[],4:[]}
 test_loss = {0:[],1:[],2:[],3:[],4:[]}
 
 
-# In[63]:
+# In[8]:
 
 
 for k in range(5):
+    print(k, ' split is running ............')
     trainLoader = training_loader[k]
     testLoader = testing_loader[k]
     # Define model
-    net = MultiMLP_LSTM().to(device)
+    net = MLP_LSTM().to(device)
     # Create snn loss instance.
     criterion = nn.CrossEntropyLoss()
     # Define optimizer module.
     optimizer = torch.optim.Adam(net.parameters(), lr = 0.01, amsgrad = True)
-    for epoch in range(num_epochs):
+    for epoch in range(501):
         tSt = datetime.now()
         # Training loop.
         net.train()
         correct = 0
         batch_loss = 0
         train_acc = 0
-        for i, (input_tact_left, in_vis,_, label) in enumerate(trainLoader, 0):
+        for i, (input_tact_left, _, label) in enumerate(trainLoader, 0):
 
             input_tact_left = input_tact_left.to(device)
             input_tact_left = input_tact_left.squeeze()
             input_tact_left = input_tact_left.permute(0,2,1)
-            in_vis = in_vis.to(device)
-            in_vis = in_vis.squeeze().permute(0,1,4,2,3)
             #print(input_tact_left.shape)
             label = label.to(device)
             # Forward pass of the network.
             net.hidden = net.init_hidden(input_tact_left.shape[0])
-            out_tact = net.forward(input_tact_left, in_vis)
+            out_tact = net.forward(input_tact_left)
+            #print(out_tact.shape)
             # Calculate loss.
+            #print(label.shape)
             loss = criterion(out_tact, label)
             #print(loss)
 
@@ -205,16 +186,14 @@ for k in range(5):
         batch_loss = 0
         test_acc = 0
         with torch.no_grad():
-            for i, (input_tact_left,in_vis, _, label) in enumerate(testLoader, 0):
+            for i, (input_tact_left, _, label) in enumerate(testLoader, 0):
                 input_tact_left = input_tact_left.to(device)
                 input_tact_left = input_tact_left.squeeze()
                 input_tact_left = input_tact_left.permute(0,2,1)
-                in_vis = in_vis.to(device)
-                in_vis = in_vis.squeeze().permute(0,1,4,2,3)
 
                 # Forward pass of the network.
                 net.hidden = net.init_hidden(input_tact_left.shape[0])
-                out_tact = net.forward(input_tact_left, in_vis)
+                out_tact = net.forward(input_tact_left)
                 label = label.to(device)
                 _, predicted = torch.max(out_tact.data, 1)
                 correct += (predicted == label).sum().item()
@@ -225,27 +204,17 @@ for k in range(5):
         test_loss[k].append(batch_loss)
         test_acc = correct/len(testLoader.dataset)
         test_accs[k].append(test_acc)
-        if epoch % 50:
+        if epoch%20==0:
             print('------------------------')
             print('saving model')
-            torch.save(net.state_dict(), ref_name + '_' + str(k) + ".pt")
+            torch.save(net.state_dict(), ref_name + '_' + str(epoch) + '_' + str(k) + ".pt")
             print('Train:', train_acc, 'Test:', test_acc)
             print('------------------------')
-        if epoch%1 == 0:
+        if epoch%50 == 0:
             print(epoch, 'Train:', train_acc, 'Test:', test_acc)
-
-    del net
-
-
-# In[65]:
-
 
 import pickle
 pickle.dump( [train_accs, test_accs, train_loss, test_loss], open( ref_name + ".stats", "wb" ) )
-
-
-# In[ ]:
-
 
 
 
