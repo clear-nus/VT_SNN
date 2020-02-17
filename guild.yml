@@ -1,0 +1,18 @@
+- model: vtsnn
+  description: VT-SNN models
+  sourcecode:
+    select:
+      - exclude: slayerPytorch
+  operations:
+    prepare-data:
+      description: Preprocess data for training
+      main: preprocess --save_dir .
+      flags:
+        tactile_path: /datasets/eventdata/batch2/aces_recordings/
+        video_path: /datasets/eventdata/batch2/prophesee_recordings/
+        trajectory_path: /datasets/eventdata/batch2/traj_start_ends/
+        blacklist_path: /datasets/eventdata/batch2/blacklist.txt
+        threshold: 1
+        selection: grasp_lift_hold6.5
+        modes: tac
+        bin_duration: 0.1
