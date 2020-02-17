@@ -14,7 +14,7 @@ import argparse
 
 np.random.seed(0)
 
-ogging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
 log = logging.getLogger()
 
@@ -181,7 +181,7 @@ class CameraData:
         df = pd.DataFrame(columns=["x", "y", "polarity", "timestamp"])
         a = td_data["x"][0][0]
         b = td_data["y"][0][0]
-        mask_x = (a >= 230) && (a < 430)
+        mask_x = (a >= 230) & (a < 430)
         mask_y = (b >= 100)
         a1 = a[mask_x & mask_y] - 230
         b1 = b[mask_x & mask_y] - 100
@@ -339,7 +339,10 @@ ViTac.binarize_save(bin_duration=args.bin_duration, modes=modes)
 # TAS edited ------------------------------------
 remove_outlier = True
 from sklearn.model_selection import StratifiedKFold
-remove_list = np.loadtxt('blacklisted.txt').astype(int)
+
+if remove_outlier:
+    path_outlier = "/home/tasbolat/some_python_examples/VT_SNN/auxillary_files/"
+    remove_list = np.loadtxt(path_outlier + 'blacklisted.txt').astype(int)
 
 # create labels
 labels = []
@@ -369,7 +372,7 @@ for train_index, test_index in  skf.split(np.zeros(len(labels)), labels[:,1]):
 splits = ['80_20_1','80_20_2','80_20_3','80_20_4', '80_20_5']
 count = 0
 for split in splits:
-    np.savetxt('splits/' + 'train_' + split + '.txt', np.array(train_indices[count], dtype=int), fmt='%d', delimiter='\t')
-    np.savetxt('splits/' + 'test_' + split + '.txt', np.array(test_indices[count], dtype=int), fmt='%d', delimiter='\t')
+    np.savetxt('/home/tasbolat/some_python_examples/VT_SNN/splits/' + 'train_' + split + '.txt', np.array(train_indices[count], dtype=int), fmt='%d', delimiter='\t')
+    np.savetxt('/home/tasbolat/some_python_examples/VT_SNN/splits/' + 'test_' + split + '.txt', np.array(test_indices[count], dtype=int), fmt='%d', delimiter='\t')
 
 # End of TAS edit ----------------------------------------
