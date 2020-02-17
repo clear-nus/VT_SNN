@@ -1,8 +1,5 @@
 # VT_SNN
 
-## Prerequisites
-1. [SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn Spiking Neural Network (SNN)
-=======
 ## TODO
 1. Run SNN models 5 times (TAS)
 2. Where is the pooling layer code (JETHRO)
@@ -15,11 +12,7 @@ more coming soon ...
 pip install -r requirements.txt
 ```
 3. We use [guild.ai](https://github.com/guildai/guildai) to track
-experiment runs.
-
-# Pre-processing data
-=======
-See training progress with `guild tensorboard`, and a quick overview
+experiment runs. See training progress with `guild tensorboard`, and a quick overview
 of metrics with `guild compare`.
 
 ## Pre-processing data
@@ -28,7 +21,8 @@ Preprocessing involves binning spikes, for both the visual and tactile
 data. To run on beast:
 
 ```
-    guild run vitac:preprocess-data
+    guild run vtsnn:prepare-data
+
 ```
 
 ## Baseline Model

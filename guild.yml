@@ -15,6 +15,6 @@
         save_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
         threshold: 1
         selection: grasp_lift_hold
-        modes: tac
+        modes: vi
         bin_duration: 0.02
         remove_outlier: False
