@@ -72,7 +72,9 @@ parser.add_argument(
     default="vitac",
     required=True,
 )
-
+parser.add_argument(
+    "--remove_outlier", type=bool, help="removes outliers", required=True
+)
 args = parser.parse_args()
 
 def read_tactile_file(tactile_path, obj_name):
@@ -370,4 +372,4 @@ for split in splits:
     np.savetxt('splits/' + 'train_' + split + '.txt', np.array(train_indices[count], dtype=int), fmt='%d', delimiter='\t')
     np.savetxt('splits/' + 'test_' + split + '.txt', np.array(test_indices[count], dtype=int), fmt='%d', delimiter='\t')
 
-    # End of TAS edit ----------------------------------------
+# End of TAS edit ----------------------------------------

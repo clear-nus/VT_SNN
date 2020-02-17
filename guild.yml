@@ -16,3 +16,4 @@
         selection: grasp_lift_hold6.5
         modes: tac
         bin_duration: 0.1
+        remove_outlier: False
