@@ -12,6 +12,8 @@ from pathlib import Path
 from collections import namedtuple
 import argparse
 
+np.random.seed(0)
+
 ogging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
 log = logging.getLogger()
@@ -294,7 +296,7 @@ class ViTacData:
         if Modes.TACT in modes:
             Parallel(n_jobs=18)(delayed(tact_bin_save)(*zz) for zz in big_list_tact)
         if Modes.VIZ in modes:
-            Parallel(n_jobs=10)(delayed(vis_bin_save)(*zz) for zz in big_list_vis)
+            Parallel(n_jobs=18)(delayed(vis_bin_save)(*zz) for zz in big_list_vis)
 
 
 # batch2
@@ -331,3 +333,41 @@ elif args.modes == "vitac":
     modes = [Modes.TACT, Modes.VIZ]
 
 ViTac.binarize_save(bin_duration=args.bin_duration, modes=modes)
+
+# TAS edited ------------------------------------
+remove_outlier = True
+from sklearn.model_selection import StratifiedKFold
+remove_list = np.loadtxt('blacklisted.txt').astype(int)
+
+# create labels
+labels = []
+current_label = -1
+overall_count = -1
+for obj in list_of_objects2:
+    current_label += 1
+    for i in range(0, 20):
+        overall_count+=1
+        if remove_outlier:
+            if overall_count in remove_list[:,0]:
+                continue
+        labels.append([overall_count, current_label])
+labels = np.array(labels)
+
+# stratified k fold
+skf = StratifiedKFold(n_splits=5, random_state=100, shuffle=True)
+train_indices = []
+test_indices = []
+for train_index, test_index in  skf.split(np.zeros(len(labels)), labels[:,1]):
+    train_indices.append(train_index)
+    test_indices.append(test_index)
+    #print("TRAIN:", train_index, "TEST:", test_index)
+
+
+# write to the file
+splits = ['80_20_1','80_20_2','80_20_3','80_20_4', '80_20_5']
+count = 0
+for split in splits:
+    np.savetxt('splits/' + 'train_' + split + '.txt', np.array(train_indices[count], dtype=int), fmt='%d', delimiter='\t')
+    np.savetxt('splits/' + 'test_' + split + '.txt', np.array(test_indices[count], dtype=int), fmt='%d', delimiter='\t')
+
+    # End of TAS edit ----------------------------------------
