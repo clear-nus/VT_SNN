@@ -222,7 +222,7 @@ def _test():
 def _save_model(epoch, loss):
     log.info(f"Writing model at epoch {epoch}...")
     checkpoint_path = (
-        Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{arg.sample_file:1d}-{loss:0.3f}.pt"
+        Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{args.sample_file:1d}-{loss:0.3f}.pt"
     )
     torch.save(net.state_dict(), checkpoint_path)
 
