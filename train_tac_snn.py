@@ -222,7 +222,7 @@ def _test():
 def _save_model(epoch, loss):
     log.info(f"Writing model at epoch {epoch}...")
     checkpoint_path = (
-        Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{loss:0.3f}.pt"
+        Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{arg.sample_file:1d}-{loss:0.3f}.pt"
     )
     torch.save(net.state_dict(), checkpoint_path)
 
@@ -230,5 +230,5 @@ for epoch in range(1, args.epochs + 1):
     _train()
     if epoch % 10 == 0:
         test_loss = _test()
-    if epoch % 50 == 0:
+    if epoch % 100 == 0:
         _save_model(epoch, test_loss)
