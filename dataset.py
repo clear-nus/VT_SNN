@@ -22,7 +22,7 @@ class ViTacDataset(Dataset):
         class_label = self.samples[index, 1]
         target_class = torch.zeros((20, 1, 1, 1))
         target_class[class_label, ...] = 1
-
+    
         return (
             self.tact[input_index],
             torch.tensor(0),

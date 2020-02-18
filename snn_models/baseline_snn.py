@@ -19,9 +19,6 @@ class SlayerMLP(torch.nn.Module):
         return spike_output
 
 class SlayerVisMLP(torch.nn.Module):
-	'''
-    2 layer MLP based on SLAYER used for vision data
-    '''
     def __init__(self, netParams, hidden_size, output_size):
         super(SlayerVisMLP, self).__init__()
         self.slayer = snn.layer(netParams['neuron'], netParams['simulation'])

@@ -20,11 +20,16 @@ of metrics with `guild compare`.
 Preprocessing involves binning spikes, for both the visual and tactile
 data. To run on beast:
 
+1. 
 ```
     guild run vtsnn:prepare-data
 
 ```
+2. 
+```
+    python downsample_images.py --path ../data_VT_SNN --count 400 --network network.yaml
 
+```
 ## Baseline Model
 
 ```

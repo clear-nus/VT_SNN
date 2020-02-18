@@ -3,7 +3,7 @@ import numpy as np
 import slayerSNN as snn
 from pathlib import Path
 import logging
-from models.slayer_baseline import SlayerMLP
+from snn_models.baseline_snn import SlayerMLP
 from torch.utils.data import DataLoader
 from dataset import ViTacDataset
 from torch.utils.tensorboard import SummaryWriter
@@ -35,12 +35,12 @@ parser.add_argument(
 parser.add_argument(
     "--r_l2", type=float, help="Regularization weight for L2.", required=True
 )
-parser.add_argument(
-    "--r_fano", type=float, help="Regularization weight for Fano.", required=True
-)
-parser.add_argument(
-    "--r_fano_var", type=float, help="Regularization weight for Fano (Variance Only).", required=True
-)
+# parser.add_argument(
+#     "--r_fano", type=float, help="Regularization weight for Fano.", required=True
+# )
+# parser.add_argument(
+#     "--r_fano_var", type=float, help="Regularization weight for Fano (Variance Only).", required=True
+# )
 parser.add_argument(
     "--hidden_size", type=int, help="Size of hidden layer.", required=True
 )
@@ -203,24 +203,16 @@ def _test():
             spike_loss = error.numSpikes(output, target)
             l1_loss = l1_reg(net.spike_trains)
             l2_loss = l2_reg(net.spike_trains)
-            # fano_loss = fano_reg(net.spike_trains)
-            # fano_var_loss = fano_var_reg(net.spike_trains)
-
-            # loss = spike_loss + args.r_l1 * l1_loss + args.r_l2 * l2_loss + args.r_fano * fano_loss + args.r_fano_var * fano_var_loss
             loss = spike_loss + args.r_l1 * l1_loss + args.r_l2 * l2_loss
 
             losses[Losses.L1] += l1_loss
             losses[Losses.L2] += l2_loss
             losses[Losses.SPIKE] += spike_loss
-            # losses[Losses.FANO] += fano_loss
-            # losses[Losses.FANO_VAR] += fano_var_loss
             losses[Losses.TOTAL] += loss
 
         writer.add_scalar("l1_loss/test", losses[Losses.L1] / len(test_loader), epoch)
         writer.add_scalar("l2_loss/test", losses[Losses.L2] / len(test_loader), epoch)
         writer.add_scalar("spike_loss/test", losses[Losses.SPIKE] / len(test_loader), epoch)
-        # writer.add_scalar("fano_loss/test", losses[Losses.FANO] / len(test_loader), epoch)
-        # writer.add_scalar("fano_var_loss/test", losses[Losses.FANO_VAR] / len(test_loader), epoch)
         writer.add_scalar("loss/test", losses[Losses.TOTAL] / len(test_loader), epoch)
         writer.add_scalar("acc/test", correct / num_samples, epoch)
 
@@ -238,5 +230,5 @@ for epoch in range(1, args.epochs + 1):
     _train()
     if epoch % 10 == 0:
         test_loss = _test()
-    if epoch % 100 == 0:
+    if epoch % 50 == 0:
         _save_model(epoch, test_loss)
