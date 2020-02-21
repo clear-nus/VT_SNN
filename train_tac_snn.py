@@ -150,7 +150,7 @@ def _test():
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            loss = error.numSpikes(output, target)
+            spike_loss = error.numSpikes(output, target)
             l1_loss = l1_reg(net.spike_trains)
             l2_loss = l2_reg(net.spike_trains)
 
@@ -163,7 +163,7 @@ def _test():
         writer.add_scalar("loss/test", losses[Losses.SPIKE] / len(test_loader), epoch)
         writer.add_scalar("acc/test", correct / num_samples, epoch)
 
-    return loss
+    return spike_loss
 
 
 def _save_model(epoch, loss):
