@@ -3,8 +3,7 @@ import numpy as np
 import slayerSNN as snn
 from pathlib import Path
 import logging
-#from models.slayer_multimodal import EncoderVis
-from snn_models.multimodal_snn import EncoderVis
+from models.slayer_multimodal import EncoderVis
 from torch.utils.data import DataLoader
 from dataset import ViTacVisDataset
 from torch.utils.tensorboard import SummaryWriter

@@ -47,7 +47,7 @@
         sc_false: 5
         sample_file: 1
         hidden_size: 32
-        checkpoint_dir: /home/tasbolat/some_python_examples/VT_SNN/logged_models/
+        checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
       compare:
         - =batch_size
         - =prob
@@ -119,4 +119,65 @@
         - l2_loss/test as l2_loss_test
         - loss/test as loss_test
         - acc/test as acc_test
+        - max acc/test as max_acc_test
+        
+    mm:
+      description: Train MM model
+      main: train_mm_snn
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - tsample
+        - tsr_stop
+        - sc_true
+        - sc_false
+        - lr
+        - sample_file
+        - r_l1
+        - r_l2
+        - output_size
+      flags:
+        batch_size:
+          default: 8
+        epochs:
+          default: 500
+        lr:
+          default: 0.001
+        data_dir:
+          default: /home/tasbolat/some_python_examples/data_VT_SNN
+        tsample:
+          default: 325
+        tsr_stop:
+          default: 325
+        sc_true:
+          default: 150
+        sc_false:
+          default: 5
+        sample_file:
+          default: 1        
+        output_size:
+          default: 20
+        checkpoint_dir: .
+      compare:
+        - =batch_size
+        - =prob
+        - =epochs
+        - =tsample
+        - =tsr_stop
+        - =sc_true
+        - =sc_false
+        - =lr
+        - =sample_file
+        - spike_loss/train as spike_loss_train        
+        - l1_loss/train as l1_loss_train
+        - l2_loss/train as l2_loss_train
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - spike_loss/test as spike_loss_test
+        - l1_loss/test as l1_loss_test
+        - l2_loss/test as l2_loss_test
+        - loss/test as loss_test
         - max acc/test as max_acc_test
