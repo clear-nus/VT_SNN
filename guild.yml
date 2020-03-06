@@ -68,3 +68,55 @@
         - l2_loss/test as l2_loss_test
         - loss/test as loss_test
         - max acc/test as max_acc_test
+    viz:
+      description: Train vizual model
+      main: train_viz_snn
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - tsample
+        - tsr_stop
+        - sc_true
+        - sc_false
+        - lr
+        - sample_file
+        - output_size
+        - checkpoint_dir
+      flags:
+        batch_size: 8
+        epochs: 500
+        lr: 0.01
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        tsample: 325
+        tsr_stop: 325
+        sc_true: 150
+        sc_false: 5
+        sample_file: 1
+        output_size: 20
+        checkpoint_dir: .
+      compare:
+        - =batch_size
+        - =prob
+        - =epochs
+        - =tsample
+        - =tsr_stop
+        - =sc_true
+        - =sc_false
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - spike_loss/train as spike_loss_train
+        - l1_loss/train as l1_loss_train
+        - l2_loss/train as l2_loss_train
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - acc/train as acc_train
+        - spike_loss/test as spike_loss_test
+        - l1_loss/test as l1_loss_test
+        - l2_loss/test as l2_loss_test
+        - loss/test as loss_test
+        - acc/test as acc_test
+        - max acc/test as max_acc_test

@@ -3,7 +3,8 @@ import numpy as np
 import slayerSNN as snn
 from pathlib import Path
 import logging
-from models.slayer_multimodal import EncoderVis
+#from models.slayer_multimodal import EncoderVis
+from snn_models.multimodal_snn import EncoderVis
 from torch.utils.data import DataLoader
 from dataset import ViTacVisDataset
 from torch.utils.tensorboard import SummaryWriter
@@ -64,7 +65,7 @@ params = {
 
 input_size = 156  # Tact
 
-device = torch.device("cuda")
+device = torch.device("cuda:2")
 writer = SummaryWriter(".")
 net = EncoderVis(params, args.output_size).to(device)
 
@@ -147,6 +148,8 @@ def _train():
         spike_loss = error.numSpikes(output, target)
         l1_loss = l1_reg(net.spike_trains)
         l2_loss = l2_reg(net.spike_trains)
+        
+        loss = spike_loss
 
         losses[Losses.L1] += l1_loss
         losses[Losses.L2] += l2_loss
@@ -179,6 +182,8 @@ def _test():
             spike_loss = error.numSpikes(output, target)
             l1_loss = l1_reg(net.spike_trains)
             l2_loss = l2_reg(net.spike_trains)
+            
+            loss = spike_loss
 
             losses[Losses.L1] += l1_loss
             losses[Losses.L2] += l2_loss

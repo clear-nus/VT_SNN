@@ -121,6 +121,8 @@ def _train():
         spike_loss = error.numSpikes(output, target)
         l1_loss = l1_reg(net.spike_trains)
         l2_loss = l2_reg(net.spike_trains)
+        
+        loss = spike_loss
 
         losses[Losses.L1] += l1_loss
         losses[Losses.L2] += l2_loss
@@ -153,6 +155,8 @@ def _test():
             spike_loss = error.numSpikes(output, target)
             l1_loss = l1_reg(net.spike_trains)
             l2_loss = l2_reg(net.spike_trains)
+            
+            loss = spike_loss
 
             losses[Losses.L1] += l1_loss
             losses[Losses.L2] += l2_loss
