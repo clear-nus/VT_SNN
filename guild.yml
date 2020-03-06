@@ -6,17 +6,18 @@
   operations:
     prepare-data:
       description: Preprocess data for training
-      main: preprocess --save_dir ../data_VT_SNN
+      main: preprocess
       flags:
+        save_dir: /home/tasbolat/some_python_examples/data_VT_SNN
         tactile_path: /datasets/eventdata/batch2/aces_recordings/
         video_path: /datasets/eventdata/batch2/prophesee_recordings/
         trajectory_path: /datasets/eventdata/batch2/traj_start_ends/
         blacklist_path: /datasets/eventdata/batch2/blacklist.txt
         threshold: 1
         selection: grasp_lift_hold
-        modes: tac
+        modes: vitac
         bin_duration: 0.02
-        remove_outlier: False
+        remove_outlier: True
     tact:
       description: Train tactile model
       main: train_tac_snn

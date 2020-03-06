@@ -65,7 +65,7 @@ params = {
 input_size = 156  # Tact
 output_size = 20
 
-device = torch.device("cuda")
+device = torch.device("cuda:1")
 writer = SummaryWriter(".")
 net = SlayerMLP(params, input_size, args.hidden_size, output_size).to(device)
 
