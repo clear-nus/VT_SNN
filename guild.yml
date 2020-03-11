@@ -183,6 +183,10 @@
     tact_ann:
       description: Train tactile model using ANN
       main: train_tac_ann
+        - max acc/test as max_acc_test
+    loihi-tact:
+      description: Train tactile model
+      main: train_tac_loihi_snn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -190,6 +194,7 @@
         - batch_size
         - epochs
         - lr
+        - network
         - sample_file
         - hidden_size
         - output_size
@@ -202,6 +207,13 @@
         sample_file: 1
         hidden_size: 32
         checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
+        epochs: 500
+        lr: 0.01
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        network: /home/jethro/VT_SNN/network_config/loihi.yml
+        sample_file: 1
+        hidden_size: 32
+        checkpoint_dir: .
       compare:
         - =batch_size
         - =prob
@@ -279,36 +291,6 @@
         - =lr
         - =sample_file
         - =hidden_size
-        - loss/train as loss_train
-        - max acc/train as max_acc_train
-        - loss/test as loss_test
-        - max acc/test as max_acc_test
-        - acc/test as acc_test
-        - acc/train as acc_train
-    tac_rpg:
-      description: Train RPG model
-      main: rpg_event_representation_learning/train_tac_rpg
-      output-scalars: no
-      objective:
-        maximize: acc/test
-      flags-import:
-        - batch_size
-        - epochs
-        - lr
-        - sample_file
-        - checkpoint_dir
-      flags:
-        batch_size: 4
-        epochs: 40
-        lr: 0.0001
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
-        sample_file: 1
-        checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
-      compare:
-        - =batch_size
-        - =epochs
-        - =lr
-        - =sample_file
         - loss/train as loss_train
         - max acc/train as max_acc_train
         - loss/test as loss_test
