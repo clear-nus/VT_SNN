@@ -55,16 +55,17 @@ class ViTacDataset(Dataset):
     def __init__(self, datasetPath, sampleFile):
         self.path = datasetPath 
         self.samples = np.loadtxt(sampleFile).astype('int')
-        self.vis = torch.load(Path(self.path) / "ds_vis.pt")
+        self.vis = torch.load(Path(self.path+ "pooled_vis/")  / "ds_vis.pt")
+        tact = torch.load(Path(self.path) / "tact.pt")
+        self.tact = tact.reshape(tact.shape[0], -1, tact.shape[-1])
 
     def __getitem__(self, index):
         inputIndex  = self.samples[index, 0]
         classLabel  = self.samples[index, 1]
-        return self.vis[inputIndex], classLabel
+        return self.tact[inputIndex], self.vis[inputIndex], classLabel
 
     def __len__(self):
         return self.samples.shape[0]
-
 
 # In[4]:
 
@@ -73,25 +74,19 @@ class ViTacDataset(Dataset):
 split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
 
 
-#data_dir = '/home/tasbolat/some_python_examples/data_VT_SNN/'
-pooled_viz_dir = args.data_dir + "pooled_vis/"
-
-
 #sample_file = 1
-trainingSet = ViTacDataset(datasetPath = pooled_viz_dir, sampleFile = args.data_dir + "/train_" + split_list[args.sample_file-1] + ".txt")
-train_loader = DataLoader(dataset=trainingSet, batch_size = args.batch_size, shuffle=False, num_workers=8)
+trainingSet = ViTacDataset(datasetPath = args.data_dir, sampleFile = args.data_dir + "/train_" + split_list[args.sample_file-1] + ".txt")
+train_loader = DataLoader(dataset=trainingSet, batch_size=args.batch_size, shuffle=False, num_workers=8)
  
-testingSet = ViTacDataset(datasetPath = pooled_viz_dir, sampleFile  = args.data_dir + "/test_" + split_list[args.sample_file-1] + ".txt")
-test_loader = DataLoader(dataset=testingSet, batch_size = args.batch_size, shuffle=False, num_workers=8)
-
-
+testingSet = ViTacDataset(datasetPath = args.data_dir, sampleFile  = args.data_dir + "/test_" + split_list[args.sample_file-1] + ".txt")
+test_loader = DataLoader(dataset=testingSet, batch_size=args.batch_size, shuffle=False, num_workers=8)
 
 class MultiMLP_LSTM(nn.Module):
 
     def __init__(self):
         super(MultiMLP_LSTM, self).__init__()
-        self.input_size = 1000
-        self.hidden_dim = args.hidden_size #30
+        self.input_size = 150+78*2
+        self.hidden_dim = 40 # 30
         self.batch_size = 8
         self.num_layers = 1
 
@@ -102,21 +97,24 @@ class MultiMLP_LSTM(nn.Module):
         self.fc = nn.Linear(self.hidden_dim, 20)
         
         #self.pool_vis = nn.AvgPool3d((1,5,5), padding=0, stride=(1,7,7))
-        self.fc_vis = nn.Linear(63*50*2, self.input_size)
+        self.fc_vis = nn.Linear(63*50*2, self.input_size-78*2)
 
 
-    def forward(self, in_vis):
+    def forward(self, in_tact, in_vis):
 
         in_vis = in_vis.reshape([in_vis.shape[0], 325, 50*63*2])
         #print('in vis:', in_vis.shape)
-        embeddings = self.fc_vis(in_vis).permute(1,0,2)
-        #print('embeddings:', embeddings.shape)
-                
+        viz_embeddings = self.fc_vis(in_vis).permute(1,0,2)
+        #print('viz embeddings:', viz_embeddings.shape)
+        in_tact = in_tact.permute(2,0,1)
+        #print('tact embeddings:', in_tact.shape)
+        
+        embeddings = torch.cat([viz_embeddings, in_tact], dim=2)
+        #print('embeddings:', embeddings.shape)        
         # GRU input type: (seq_len, batch, input_size)
         out, hidden = self.gru(embeddings)
         out = out.permute(1,0,2)
         #print('out: ', out.shape)
-        
         
         # Only take the output from the final timetep
         #print('out:', out.shape)
@@ -127,7 +125,7 @@ class MultiMLP_LSTM(nn.Module):
 
 # In[74]:
 
-device = torch.device("cuda:2")
+device = torch.device("cuda:1")
 writer = SummaryWriter(".")
 
 
@@ -138,12 +136,6 @@ def _save_model(epoch, loss):
     )
     torch.save(net.state_dict(), checkpoint_path)
 
-
-
-train_accs = []
-test_accs = []
-train_loss = []
-test_loss = []
 
 
 # In[75]:
@@ -158,21 +150,21 @@ optimizer = torch.optim.RMSprop(net.parameters(), lr = args.lr)
 
 # In[76]:
 
-
 for epoch in range(1, args.epochs+1):
     # Training loop.
     net.train()
     correct = 0
     batch_loss = 0
     train_acc = 0
-    for i, (in_vis, label) in enumerate(train_loader, 0):
+    for i, (in_tac, in_vis, label) in enumerate(train_loader, 0):
 
         in_vis = in_vis.to(device)
+        in_tac = in_tac.to(device)
         #in_vis = in_vis.squeeze().permute(0,1,4,2,3)
         #print(in_vis.shape)
         label = label.to(device)
         # Forward pass of the network.
-        out_tact = net.forward(in_vis)
+        out_tact = net.forward(in_tac, in_vis)
         # Calculate loss.
         loss = criterion(out_tact, label)
         #print(loss)
@@ -192,6 +184,7 @@ for epoch in range(1, args.epochs+1):
     train_acc = correct/len(train_loader.dataset)
     writer.add_scalar("loss/train", batch_loss/len(train_loader.dataset), epoch)
     writer.add_scalar("acc/train", train_acc, epoch)
+    #print(train_acc, batch_loss)
 
     # testing
     net.eval()
@@ -199,12 +192,12 @@ for epoch in range(1, args.epochs+1):
     batch_loss = 0
     test_acc = 0
     with torch.no_grad():
-        for i, (in_vis, label) in enumerate(test_loader, 0):
+        for i, (in_tac, in_vis, label) in enumerate(test_loader, 0):
             in_vis = in_vis.to(device)
-            #in_vis = in_vis.squeeze().permute(0,1,4,2,3)
+            in_tac = in_tac.to(device)
 
             # Forward pass of the network.
-            out_tact = net.forward(in_vis)
+            out_tact = net.forward(in_tac, in_vis)
             label = label.to(device)
             _, predicted = torch.max(out_tact.data, 1)
             correct += (predicted == label).sum().item()
@@ -218,11 +211,3 @@ for epoch in range(1, args.epochs+1):
 
     if epoch%100 == 0:
         _save_model(epoch, batch_loss/len(test_loader.dataset))
-
-
-
-# In[ ]:
-
-
-
-

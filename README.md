@@ -1,11 +1,9 @@
 # VT_SNN
 
-## TODO
-1. Run SNN models 5 times (TAS)
-2. Where is the pooling layer code (JETHRO)
-3. Modify ANNs (TAS and JETHRO)
-more coming soon ...
+This repo contains all implementation given in the paper.
+
 ## Prerequisits
+
 1. [SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn Spiky Neural Network (SNN)
 2. Install package requirements:
 ```
@@ -30,11 +28,52 @@ data. To run on beast:
     python downsample_images.py --path ../data_VT_SNN --count 400 --network network.yaml
 
 ```
-## Baseline Model
+## Models
+
+1. Tactile unimodal
+
+SNN:
 
 ```
-guild run vitac:baseline hidden_size=32 -b
+guild run vtsnn:tact sample_file=1 -b
+```
+ANN:
+
+```
+guild run vtsnn:tact_ann sample_file=1 -b
+```
+2. Vision unimodal
+
+SNN:
+
+```
+guild run vtsnn:viz sample_file=1 -b
+```
+ANN:
+
+```
+guild run vtsnn:viz_ann sample_file=1 -b
+```
+3. Multimodal (tactile + vision)
+
+SNN:
+
+```
+guild run vtsnn:mm sample_file=1 -b
+```
+ANN:
+
+```
+guild run vtsnn:mm_ann sample_file=1 -b
 ```
 
+We have also implement representation learning based on EST (RPG). Within ```rpg_event_representation_learning```, run
 
-
+1. Tact ETS:
+```
+guild run vtsnn:tac_rpg sample_file=1 -b
+```
+2. Vision ETS:
+```
+guild run vtsnn:vis_rpg sample_file=1 -b
+```
