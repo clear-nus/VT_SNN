@@ -67,7 +67,7 @@ ANN:
 guild run vtsnn:mm_ann sample_file=1 -b
 ```
 
-We have also implement representation learning based on EST (RPG). Within ```rpg_event_representation_learning```, run
+We have also implemented representation learning based on EST (RPG). Within ```rpg_event_representation_learning```, run
 
 1. Tact ETS:
 ```
