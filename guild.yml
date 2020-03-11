@@ -59,7 +59,6 @@
         - =lr
         - =sample_file
         - =hidden_size
-        - spike_loss/train as spike_loss_train
         - l1_loss/train as l1_loss_train
         - l2_loss/train as l2_loss_train
         - loss/train as loss_train
@@ -68,6 +67,8 @@
         - l2_loss/test as l2_loss_test
         - loss/test as loss_test
         - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
     viz:
       description: Train vizual model
       main: train_viz_snn
@@ -108,13 +109,11 @@
         - =lr
         - =sample_file
         - =hidden_size
-        - spike_loss/train as spike_loss_train
         - l1_loss/train as l1_loss_train
         - l2_loss/train as l2_loss_train
         - loss/train as loss_train
         - max acc/train as max_acc_train
         - acc/train as acc_train
-        - spike_loss/test as spike_loss_test
         - l1_loss/test as l1_loss_test
         - l2_loss/test as l2_loss_test
         - loss/test as loss_test
@@ -171,15 +170,19 @@
         - =sc_false
         - =lr
         - =sample_file
-        - spike_loss/train as spike_loss_train        
         - l1_loss/train as l1_loss_train
         - l2_loss/train as l2_loss_train
         - loss/train as loss_train
         - max acc/train as max_acc_train
-        - spike_loss/test as spike_loss_test
         - l1_loss/test as l1_loss_test
         - l2_loss/test as l2_loss_test
         - loss/test as loss_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+        - max acc/test as max_acc_test
+    tact_ann:
+      description: Train tactile model using ANN
+      main: train_tac_ann
         - max acc/test as max_acc_test
     loihi-tact:
       description: Train tactile model
@@ -198,6 +201,12 @@
         - checkpoint_dir
       flags:
         batch_size: 8
+        epochs: 600
+        lr: 0.0001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        sample_file: 1
+        hidden_size: 32
+        checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
         epochs: 500
         lr: 0.01
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
@@ -209,19 +218,82 @@
         - =batch_size
         - =prob
         - =epochs
-        - =tsample
-        - =tsr_stop
-        - =sc_true
-        - =sc_false
         - =lr
         - =sample_file
         - =hidden_size
-        - spike_loss/train as spike_loss_train
-        - l1_loss/train as l1_loss_train
-        - l2_loss/train as l2_loss_train
         - loss/train as loss_train
         - max acc/train as max_acc_train
-        - l1_loss/test as l1_loss_test
-        - l2_loss/test as l2_loss_test
         - loss/test as loss_test
         - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+    viz_ann:
+      description: Train vision model using ANN
+      main: train_viz_ann
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - lr
+        - sample_file
+        - hidden_size
+        - output_size
+        - checkpoint_dir
+      flags:
+        batch_size: 8
+        epochs: 400
+        lr: 0.0001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        sample_file: 1
+        hidden_size: 30
+        checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
+      compare:
+        - =batch_size
+        - =prob
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+    mm_ann:
+      description: Train multimodal model using ANN
+      main: train_mm_ann
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - lr
+        - sample_file
+        - hidden_size
+        - output_size
+        - checkpoint_dir
+      flags:
+        batch_size: 8
+        epochs: 400
+        lr: 0.0001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        sample_file: 1
+        hidden_size: 30
+        checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
+      compare:
+        - =batch_size
+        - =prob
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
