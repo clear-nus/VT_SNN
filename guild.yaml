@@ -314,3 +314,14 @@
         sample_file: 1
         hidden_size: 32
         checkpoint_dir: .
+    tact_svm:
+      description: Train tactile model using svm
+      main: tactile_svm
+      output-scalars: no
+      flags-import:
+        - batch_size
+        - sample_file
+      flags:
+        batch_size: 8
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        sample_file: 1

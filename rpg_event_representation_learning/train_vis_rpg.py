@@ -64,7 +64,7 @@ class RawDataset(Dataset):
 # In[15]:
 
 
-device = torch.device('cuda:2')
+device = torch.device('cuda:1')
 writer = SummaryWriter(".")
 
 
