@@ -282,8 +282,7 @@
         - loss/test as loss_test
         - max acc/test as max_acc_test
         - acc/test as acc_test
-        - acc/train as acc_train
-        
+        - acc/train as acc_train     
     loihi-tact:
       description: Train tactile model
       main: train_tac_loihi_snn
