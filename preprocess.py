@@ -372,7 +372,8 @@ for train_index, test_index in  skf.split(np.zeros(len(labels)), labels[:,1]):
 splits = ['80_20_1','80_20_2','80_20_3','80_20_4', '80_20_5']
 count = 0
 for split in splits:
-    np.savetxt('/home/tasbolat/some_python_examples/VT_SNN/splits/' + 'train_' + split + '.txt', np.array(train_indices[count], dtype=int), fmt='%d', delimiter='\t')
-    np.savetxt('/home/tasbolat/some_python_examples/VT_SNN/splits/' + 'test_' + split + '.txt', np.array(test_indices[count], dtype=int), fmt='%d', delimiter='\t')
+    np.savetxt('/home/tasbolat/some_python_examples/VT_SNN/splits/' + 'train_' + split + '.txt', np.array(labels[train_indices[count], :], dtype=int), fmt='%d', delimiter='\t')
+    np.savetxt('/home/tasbolat/some_python_examples/VT_SNN/splits/' + 'test_' + split + '.txt', np.array(labels[test_indices[count], :], dtype=int), fmt='%d', delimiter='\t')
+    count += 1
 
 # End of TAS edit ----------------------------------------

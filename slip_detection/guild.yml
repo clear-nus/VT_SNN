@@ -1,26 +1,28 @@
-- model: vtsnn
-  description: VT-SNN models
+- model: vtsnn_slip
+  description: Baseline model on Tactile data
   sourcecode:
     select:
       - exclude: slayerPytorch
+      
   operations:
     prepare-data:
-      description: Preprocess data for training
-      main: preprocess
+      description: Preprocess slip data for training for both modality
+      main: preprocess_slip_data
       flags:
-        save_dir: /home/tasbolat/some_python_examples/data_VT_SNN
-        tactile_path: /datasets/eventdata/batch2/aces_recordings/
-        video_path: /datasets/eventdata/batch2/prophesee_recordings/
-        trajectory_path: /datasets/eventdata/batch2/traj_start_ends/
-        blacklist_path: /datasets/eventdata/batch2/blacklist.txt
+        save_dir: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
+        data_path: /datasets/eventdata/slip2/
         threshold: 1
-        selection: grasp_lift_hold
-        modes: vitac
-        bin_duration: 0.02
-        remove_outlier: True
+        bin_duration: 0.001
+    downsample:
+      description: Downsample vision data and save as one big tensor
+      main: downsample
+      flags:
+        path: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
+        count: 100
+        network: /home/tasbolat/some_python_examples/VT_SNN/slip_detection/network.yaml
     tact:
-      description: Train tactile model
-      main: train_tac_snn
+      description: Train tactile model for slip
+      main: /home/tasbolat/some_python_examples/VT_SNN/train_tac_snn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -38,19 +40,19 @@
         - checkpoint_dir
       flags:
         batch_size: 8
-        epochs: 500
-        lr: 0.01
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
-        tsample: 325
-        tsr_stop: 325
-        sc_true: 150
+        epochs: 700
+        lr: 0.001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
+        tsample: 150
+        tsr_stop: 150
+        sc_true: 80
         sc_false: 5
         sample_file: 1
         hidden_size: 32
+        output_size: 2
         checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
       compare:
         - =batch_size
-        - =prob
         - =epochs
         - =tsample
         - =tsr_stop
@@ -70,8 +72,8 @@
         - acc/test as acc_test
         - acc/train as acc_train
     viz:
-      description: Train vizual model
-      main: train_viz_snn
+      description: Train vizual model for slip
+      main: /home/tasbolat/some_python_examples/VT_SNN/train_viz_snn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -89,18 +91,17 @@
       flags:
         batch_size: 8
         epochs: 500
-        lr: 0.01
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
-        tsample: 325
-        tsr_stop: 325
-        sc_true: 150
+        lr: 0.001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
+        tsample: 150
+        tsr_stop: 150
+        sc_true: 80
         sc_false: 5
         sample_file: 1
-        output_size: 20
+        output_size: 2
         checkpoint_dir: .
       compare:
         - =batch_size
-        - =prob
         - =epochs
         - =tsample
         - =tsr_stop
@@ -119,10 +120,9 @@
         - loss/test as loss_test
         - acc/test as acc_test
         - max acc/test as max_acc_test
-        
     mm:
-      description: Train MM model
-      main: train_mm_snn
+      description: Train MM model for slip
+      main: /home/tasbolat/some_python_examples/VT_SNN/train_mm_snn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -139,30 +139,19 @@
         - r_l2
         - output_size
       flags:
-        batch_size:
-          default: 8
-        epochs:
-          default: 500
-        lr:
-          default: 0.001
-        data_dir:
-          default: /home/tasbolat/some_python_examples/data_VT_SNN
-        tsample:
-          default: 325
-        tsr_stop:
-          default: 325
-        sc_true:
-          default: 150
-        sc_false:
-          default: 5
-        sample_file:
-          default: 1        
-        output_size:
-          default: 20
+        batch_size: 8
+        epochs: 500
+        lr: 0.001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
+        tsample: 150
+        tsr_stop: 150
+        sc_true: 80
+        sc_false: 5
+        sample_file: 1
+        output_size: 2
         checkpoint_dir: .
       compare:
         - =batch_size
-        - =prob
         - =epochs
         - =tsample
         - =tsr_stop
@@ -181,8 +170,8 @@
         - acc/train as acc_train
         - max acc/test as max_acc_test
     tact_ann:
-      description: Train tactile model using ANN
-      main: train_tac_ann
+      description: Train tactile model using ANN for slip
+      main: /home/tasbolat/some_python_examples/VT_SNN/train_tac_ann
       output-scalars: no
       objective:
         maximize: acc/test
@@ -198,9 +187,10 @@
         batch_size: 8
         epochs: 600
         lr: 0.0001
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
         sample_file: 1
         hidden_size: 32
+        output_size: 2
         checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
       compare:
         - =batch_size
@@ -215,8 +205,8 @@
         - acc/test as acc_test
         - acc/train as acc_train
     viz_ann:
-      description: Train vision model using ANN
-      main: train_viz_ann
+      description: Train vision model using ANN for slip
+      main: /home/tasbolat/some_python_examples/VT_SNN/train_viz_ann
       output-scalars: no
       objective:
         maximize: acc/test
@@ -232,9 +222,10 @@
         batch_size: 8
         epochs: 400
         lr: 0.0001
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
         sample_file: 1
         hidden_size: 30
+        output_size: 2
         checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
       compare:
         - =batch_size
@@ -249,7 +240,7 @@
         - acc/test as acc_test
         - acc/train as acc_train
     mm_ann:
-      description: Train multimodal model using ANN
+      description: Train multimodal model using ANN for slip
       main: train_mm_ann
       output-scalars: no
       objective:
@@ -266,13 +257,13 @@
         batch_size: 8
         epochs: 400
         lr: 0.0001
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
         sample_file: 1
         hidden_size: 30
+        output_size: 2
         checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
       compare:
         - =batch_size
-        - =prob
         - =epochs
         - =lr
         - =sample_file

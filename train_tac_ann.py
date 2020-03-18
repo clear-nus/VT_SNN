@@ -41,9 +41,13 @@ parser.add_argument(
 parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
+parser.add_argument(
+    "--output_size", type=int, help="Number of classes.", default=20
+)
 
 args = parser.parse_args()
 
+output_size = args.output_size
 
 # In[4]:
 
@@ -69,13 +73,13 @@ writer = SummaryWriter(".")
 
 
 train_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt"
+    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=output_size
 )
 train_loader = DataLoader(
     dataset=train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
 )
 test_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt"
+    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=output_size
 )
 test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
@@ -96,7 +100,7 @@ class MLP_LSTM(nn.Module):
         self.gru = nn.GRU(self.input_size, self.hidden_dim, self.num_layers)
 
         # Define the output layer
-        self.fc = nn.Linear(self.hidden_dim, 20)
+        self.fc = nn.Linear(self.hidden_dim, output_size)
         
         #self.fc_mlp = nn.Linear(156, self.input_size)
 

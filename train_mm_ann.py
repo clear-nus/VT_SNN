@@ -47,6 +47,9 @@ parser.add_argument(
 parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
+parser.add_argument(
+    "--output_size", type=int, help="Number of classes.", required=True
+)
 
 args = parser.parse_args()
 
@@ -66,9 +69,6 @@ class ViTacDataset(Dataset):
 
     def __len__(self):
         return self.samples.shape[0]
-
-# In[4]:
-
 
 # Dataset and dataLoader instances.
 split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
@@ -94,7 +94,7 @@ class MultiMLP_LSTM(nn.Module):
         self.gru = nn.GRU(self.input_size, self.hidden_dim, self.num_layers)
 
         # Define the output layer
-        self.fc = nn.Linear(self.hidden_dim, 20)
+        self.fc = nn.Linear(self.hidden_dim, args.output_size)
         
         #self.pool_vis = nn.AvgPool3d((1,5,5), padding=0, stride=(1,7,7))
         self.fc_vis = nn.Linear(63*50*2, self.input_size-78*2)
@@ -102,7 +102,7 @@ class MultiMLP_LSTM(nn.Module):
 
     def forward(self, in_tact, in_vis):
 
-        in_vis = in_vis.reshape([in_vis.shape[0], 325, 50*63*2])
+        in_vis = in_vis.reshape([in_vis.shape[0],  in_vis.shape[-1], 50*63*2])
         #print('in vis:', in_vis.shape)
         viz_embeddings = self.fc_vis(in_vis).permute(1,0,2)
         #print('viz embeddings:', viz_embeddings.shape)

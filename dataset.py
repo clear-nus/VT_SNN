@@ -10,8 +10,9 @@ import slayerSNN as snn
 
 
 class ViTacDataset(Dataset):
-    def __init__(self, path, sample_file):
+    def __init__(self, path, sample_file, output_size):
         self.path = path
+        self.output_size = output_size
         sample_file = Path(path) / sample_file
         self.samples = np.loadtxt(sample_file).astype("int")
         tact = torch.load(Path(path) / "tact.pt")
@@ -20,7 +21,7 @@ class ViTacDataset(Dataset):
     def __getitem__(self, index):
         input_index = self.samples[index, 0]
         class_label = self.samples[index, 1]
-        target_class = torch.zeros((20, 1, 1, 1))
+        target_class = torch.zeros((self.output_size, 1, 1, 1))
         target_class[class_label, ...] = 1
     
         return (

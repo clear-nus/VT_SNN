@@ -35,7 +35,9 @@ parser.add_argument(
 parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
-
+parser.add_argument(
+    "--output_size", type=int, help="Number of classes", default=20
+)
 args = parser.parse_args()
 
 params = {
@@ -63,7 +65,7 @@ params = {
 }
 
 input_size = 156  # Tact
-output_size = 20
+output_size = args.output_size # 20
 
 device = torch.device("cuda:1")
 writer = SummaryWriter(".")
@@ -75,13 +77,13 @@ optimizer = torch.optim.RMSprop(
 )
 
 train_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt"
+    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=output_size
 )
 train_loader = DataLoader(
     dataset=train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
 )
 test_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt"
+    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=output_size
 )
 test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4

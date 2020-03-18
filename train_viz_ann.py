@@ -47,6 +47,9 @@ parser.add_argument(
 parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
+parser.add_argument(
+    "--output_size", type=int, help="Number of classes.", default=20
+)
 
 args = parser.parse_args()
 
@@ -99,15 +102,14 @@ class MultiMLP_LSTM(nn.Module):
         self.gru = nn.GRU(self.input_size, self.hidden_dim, self.num_layers)
 
         # Define the output layer
-        self.fc = nn.Linear(self.hidden_dim, 20)
+        self.fc = nn.Linear(self.hidden_dim, args.output_size)
         
         #self.pool_vis = nn.AvgPool3d((1,5,5), padding=0, stride=(1,7,7))
         self.fc_vis = nn.Linear(63*50*2, self.input_size)
 
 
     def forward(self, in_vis):
-
-        in_vis = in_vis.reshape([in_vis.shape[0], 325, 50*63*2])
+        in_vis = in_vis.reshape([in_vis.shape[0], in_vis.shape[-1], 50*63*2])
         #print('in vis:', in_vis.shape)
         embeddings = self.fc_vis(in_vis).permute(1,0,2)
         #print('embeddings:', embeddings.shape)
@@ -218,11 +220,3 @@ for epoch in range(1, args.epochs+1):
 
     if epoch%100 == 0:
         _save_model(epoch, batch_loss/len(test_loader.dataset))
-
-
-
-# In[ ]:
-
-
-
-
