@@ -241,7 +241,7 @@
         - acc/train as acc_train
     mm_ann:
       description: Train multimodal model using ANN for slip
-      main: train_mm_ann
+      main: /home/tasbolat/some_python_examples/VT_SNN/train_mm_ann
       output-scalars: no
       objective:
         maximize: acc/test
