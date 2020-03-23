@@ -317,3 +317,70 @@
         - max acc/test as max_acc_test
         - acc/test as acc_test
         - acc/train as acc_train
+    tact_ann_cnn3d:
+      description: Train tactile model usin CNN3D
+      main: train_tac_cnn
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - tsample
+        - lr
+        - sample_file
+        - output_size
+        - checkpoint_dir
+      flags:
+        batch_size: 8
+        epochs: 200
+        lr: 0.00001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        sample_file: 1
+        output_size: 20
+        checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =output_size
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+    mm_ann_cnn3d:
+      description: Train multimodal model using CNN
+      main: train_mm_cnn
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - lr
+        - sample_file
+        - output_size
+        - checkpoint_dir
+      flags:
+        batch_size: 8
+        epochs: 600
+        lr: 0.00001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        sample_file: 1
+        output_size: 20
+        checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =output_size
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
