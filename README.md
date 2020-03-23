@@ -5,8 +5,9 @@ sensor and multi-modal spike-based learning. Our biologically-inspired fingertip
 number of taxels thanks to its event-based nature. Likewise, our Visual-Tactile Spiking Neural Network (VT-SNN) enables fast
 perception when coupled with event sensors. We evaluate our visual-tactile system (using the NeuTouch and Prophesee event camera) on two robot tasks: container classification and rotational slip detection.
 
-
-<img src="https://github.com/tasbolat1/VT_SNN/blob/master/auxillary_files/VT_SNN.png" height="240" width="480">
+<p align="center">
+<img src="https://github.com/tasbolat1/VT_SNN/blob/master/auxillary_files/VT_SNN.png" height="360" width="400">
+</p>
 
 ## update
 CNN3D models are being tested ...
