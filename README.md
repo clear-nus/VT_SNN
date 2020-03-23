@@ -1,6 +1,18 @@
-# VT_SNN
+# Event-Driven Visual-Tactile Sensing and Learning for Robots
 
-This repo contains all implementation given in the paper.
+This work contributes an event-driven visual-tactile perception system, comprising a novel biologically-inspired tactile
+sensor and multi-modal spike-based learning. Our biologically-inspired fingertip tactile sensor, NeuTouch, scales well with the
+number of taxels thanks to its event-based nature. Likewise, our Visual-Tactile Spiking Neural Network (VT-SNN) enables fast
+perception when coupled with event sensors. We evaluate our visual-tactile system (using the NeuTouch and Prophesee event camera) on two robot tasks: container classification and rotational slip detection.
+
+
+![architecture resnet](https://github.com/hfawaz/aaltd18/blob/master/png/resnet-archi.png)
+
+## update
+CNN3D models are being tested ...
+
+## Overall structure of the codes
+This git consists of two main parts: object classification and slip detection. For each task, we developed SNN model and its ANN counterpart. Please follow below instruction to run the code.
 
 ## Prerequisits
 
