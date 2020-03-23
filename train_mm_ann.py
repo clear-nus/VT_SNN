@@ -137,10 +137,6 @@ def _save_model(epoch, loss):
     torch.save(net.state_dict(), checkpoint_path)
 
 
-
-# In[75]:
-
-
 net = MultiMLP_LSTM().to(device)
 # Create snn loss instance.
 criterion = nn.CrossEntropyLoss()
