@@ -6,8 +6,7 @@ number of taxels thanks to its event-based nature. Likewise, our Visual-Tactile 
 perception when coupled with event sensors. We evaluate our visual-tactile system (using the NeuTouch and Prophesee event camera) on two robot tasks: container classification and rotational slip detection.
 
 
-#![architecture_VT_SNN]( | width=100)
-<img src="https://github.com/tasbolat1/VT_SNN/blob/master/auxillary_files/VT_SNN.png" height="24" width="48">
+<img src="https://github.com/tasbolat1/VT_SNN/blob/master/auxillary_files/VT_SNN.png" height="240" width="480">
 
 ## update
 CNN3D models are being tested ...
