@@ -55,6 +55,11 @@ parser.add_argument(
     "--threshold", type=int, help="Threshold for tactile.", required=True
 )
 parser.add_argument(
+    "--n_sample_per_object", type=int, help="Number of samples per class.", required=True
+)
+
+
+parser.add_argument(
     "--selection",
     type=str,
     choices=selections.keys(),
@@ -83,11 +88,9 @@ def read_tactile_file(tactile_path, obj_name):
     df = pd.read_csv(
         obj_path,
         delimiter=" ",
-        names=["polarity", "cell_index", "timestamp_sec", "timestamp_nsec"],
-        dtype=int,
+        names=["polarity", "cell_index", "timestamp"],
+        dtype={'polarity': int, 'cell_index': int, 'timestamp': float}
     )
-    df = df.assign(timestamp=df.timestamp_sec + df.timestamp_nsec / 1000000000)
-    df = df.drop(["timestamp_sec", "timestamp_nsec"], axis=1)
     return df
 
 
@@ -261,7 +264,7 @@ def vis_bin_save(file_name, overall_count, bin_duration, selection, save_dir):
 class ViTacData:
     def __init__(self, save_dir, list_of_objects, selection="full"):
         self.list_of_objects = list_of_objects
-        self.iters = 20
+        self.iters = args.n_sample_per_object
         os.makedirs(save_dir, exist_ok=True)
         self.save_dir = save_dir
         self.selection = selection
@@ -337,7 +340,7 @@ elif args.modes == "vitac":
 ViTac.binarize_save(bin_duration=args.bin_duration, modes=modes)
 
 # TAS edited ------------------------------------
-remove_outlier = True
+remove_outlier = args.remove_outlier
 from sklearn.model_selection import StratifiedKFold
 
 if remove_outlier:
@@ -350,7 +353,7 @@ current_label = -1
 overall_count = -1
 for obj in list_of_objects2:
     current_label += 1
-    for i in range(0, 20):
+    for i in range(0, args.n_sample_per_object):
         overall_count+=1
         if remove_outlier:
             if overall_count in remove_list[:,0]:
@@ -362,18 +365,21 @@ labels = np.array(labels)
 skf = StratifiedKFold(n_splits=5, random_state=100, shuffle=True)
 train_indices = []
 test_indices = []
+
+
 for train_index, test_index in  skf.split(np.zeros(len(labels)), labels[:,1]):
     train_indices.append(train_index)
     test_indices.append(test_index)
     #print("TRAIN:", train_index, "TEST:", test_index)
 
+print('Training size:', len(train_indices[0]),', Testing size:',  len(test_indices[0]))
 
 # write to the file
 splits = ['80_20_1','80_20_2','80_20_3','80_20_4', '80_20_5']
 count = 0
 for split in splits:
-    np.savetxt('/home/tasbolat/some_python_examples/VT_SNN/splits/' + 'train_' + split + '.txt', np.array(labels[train_indices[count], :], dtype=int), fmt='%d', delimiter='\t')
-    np.savetxt('/home/tasbolat/some_python_examples/VT_SNN/splits/' + 'test_' + split + '.txt', np.array(labels[test_indices[count], :], dtype=int), fmt='%d', delimiter='\t')
+    np.savetxt(args.save_dir + 'train_' + split + '.txt', np.array(labels[train_indices[count], :], dtype=int), fmt='%d', delimiter='\t')
+    np.savetxt(args.save_dir + 'test_' + split + '.txt', np.array(labels[test_indices[count], :], dtype=int), fmt='%d', delimiter='\t')
     count += 1
 
 # End of TAS edit ----------------------------------------

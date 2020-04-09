@@ -8,16 +8,17 @@
       description: Preprocess data for training
       main: preprocess
       flags:
-        save_dir: /home/tasbolat/some_python_examples/data_VT_SNN
-        tactile_path: /datasets/eventdata/batch2/aces_recordings/
-        video_path: /datasets/eventdata/batch2/prophesee_recordings/
-        trajectory_path: /datasets/eventdata/batch2/traj_start_ends/
+        save_dir: /home/tasbolat/some_python_examples/data_VT_SNN_2/
+        tactile_path: /datasets/eventdata/batch2_new/aces_recordings/
+        video_path: /datasets/eventdata/batch2_new/prophesee_recordings/
+        trajectory_path: /datasets/eventdata/batch2_new/traj_start_ends/
         blacklist_path: /datasets/eventdata/batch2/blacklist.txt
         threshold: 1
         selection: grasp_lift_hold
         modes: vitac
         bin_duration: 0.02
-        remove_outlier: True
+        n_sample_per_object: 40
+        remove_outlier: False
     tact:
       description: Train tactile model
       main: train_tac_snn
@@ -40,7 +41,7 @@
         batch_size: 8
         epochs: 500
         lr: 0.01
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_2/
         tsample: 325
         tsr_stop: 325
         sc_true: 150
@@ -50,7 +51,6 @@
         checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
       compare:
         - =batch_size
-        - =prob
         - =epochs
         - =tsample
         - =tsr_stop
@@ -90,7 +90,7 @@
         batch_size: 8
         epochs: 500
         lr: 0.01
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_2/
         tsample: 325
         tsr_stop: 325
         sc_true: 150
@@ -100,7 +100,6 @@
         checkpoint_dir: .
       compare:
         - =batch_size
-        - =prob
         - =epochs
         - =tsample
         - =tsr_stop

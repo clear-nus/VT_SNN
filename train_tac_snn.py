@@ -67,7 +67,7 @@ params = {
 input_size = 156  # Tact
 output_size = args.output_size # 20
 
-device = torch.device("cuda:1")
+device = torch.device("cuda:2")
 writer = SummaryWriter(".")
 net = SlayerMLP(params, input_size, args.hidden_size, output_size).to(device)
 
@@ -80,7 +80,7 @@ train_dataset = ViTacDataset(
     path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=output_size
 )
 train_loader = DataLoader(
-    dataset=train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
+    dataset=train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
 )
 test_dataset = ViTacDataset(
     path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=output_size

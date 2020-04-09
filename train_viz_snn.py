@@ -64,7 +64,7 @@ params = {
 
 input_size = 156  # Tact
 
-device = torch.device("cuda:2")
+device = torch.device("cuda:1")
 writer = SummaryWriter(".")
 net = EncoderVis(params, args.output_size).to(device)
 
@@ -77,7 +77,7 @@ train_dataset = ViTacVisDataset(
     path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=args.output_size
 )
 train_loader = DataLoader(
-    dataset=train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
+    dataset=train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
 )
 test_dataset = ViTacVisDataset(
     path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=args.output_size

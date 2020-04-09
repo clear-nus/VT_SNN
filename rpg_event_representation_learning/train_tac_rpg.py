@@ -63,7 +63,7 @@ class RawDataset(Dataset):
         return self.samples.shape[0]
 
 
-device = torch.device('cuda:1')
+device = torch.device('cuda:2')
 writer = SummaryWriter(".")
 
 
@@ -91,10 +91,10 @@ split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
 
     
 trainingSet = RawDataset(datasetPath = args.data_dir + 'tact_rpg_data/', 
-                        sampleFile = args.data_dir + "/train_" + split_list[args.sample_file] + ".txt")
+                        sampleFile = args.data_dir + "/train_80_20_" + str(args.sample_file) + ".txt")
 train_loader = Loader(trainingSet, flags, device=device)    
 testingSet = RawDataset(datasetPath = args.data_dir + 'tact_rpg_data/', 
-                        sampleFile  = args.data_dir + "/test_" + split_list[args.sample_file] + ".txt")
+                        sampleFile  = args.data_dir + "/test_80_20_"  + str(args.sample_file) + ".txt")
 test_loader = Loader(testingSet, flags, device=device)
 
 # model parameters

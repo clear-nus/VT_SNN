@@ -15,7 +15,7 @@ args = parser.parse_args()
 params = snn.params(args.network)
 
 tact_arr = []
-vis_arr = []
+# vis_arr = []
 ds_vis_arr = []
 
 for i in range(args.count):
@@ -25,22 +25,22 @@ for i in range(args.count):
     tact = torch.FloatTensor(np.load(tact_npy))
     vis = torch.FloatTensor(np.load(vis_npy)).unsqueeze(0)
     tact_arr.append(tact)
-    vis_arr.append(vis.squeeze(0))
+#     vis_arr.append(vis.squeeze(0))
     slayer = snn.layer(params["neuron"], params["simulation"])
     pool = slayer.pool(4, stride=4)
     pooled_vis = pool(vis)
     ds_vis_arr.append(pooled_vis.squeeze(0))
 
 tact = torch.stack(tact_arr)
-vis = torch.stack(vis_arr)
+# vis = torch.stack(vis_arr)
 ds_vis = torch.stack(ds_vis_arr)
 
 print(f"tact: {tact.shape}")
-print(f"vis: {vis.shape}")
+# print(f"vis: {vis.shape}")
 print(f"ds_vis: {ds_vis.shape}")
 
 torch.save(tact, Path(args.path) / "tact.pt")
-torch.save(vis, Path(args.path) / "vis.pt")
+# torch.save(vis, Path(args.path) / "vis.pt")
 torch.save(ds_vis, Path(args.path) / "ds_vis.pt")
 
 print("DONE")
