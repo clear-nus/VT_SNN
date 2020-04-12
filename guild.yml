@@ -18,7 +18,7 @@
         modes: vitac
         bin_duration: 0.02
         n_sample_per_object: 40
-        remove_outlier: False
+        remove_outlier: 0
     tact:
       description: Train tactile model
       main: train_tac_snn
@@ -34,6 +34,7 @@
         - sc_false
         - lr
         - theta
+        - tauRho
         - sample_file
         - hidden_size
         - output_size
@@ -44,6 +45,7 @@
         lr: 0.01
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_2/
         tsample: 325
+        tauRho: 1
         tsr_stop: 325
         sc_true: 150
         sc_false: 5
@@ -60,6 +62,7 @@
         - =sc_false
         - =lr
         - =theta
+        - =tauRho
         - =sample_file
         - =hidden_size
         - l1_loss/train as l1_loss_train
@@ -337,7 +340,7 @@
         batch_size: 8
         epochs: 200
         lr: 0.00001
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_2/
         sample_file: 1
         output_size: 20
         checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/

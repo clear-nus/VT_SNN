@@ -78,7 +78,7 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "--remove_outlier", type=bool, help="removes outliers", required=True
+    "--remove_outlier", type=int, help="removes outliers", required=True
 )
 args = parser.parse_args()
 
@@ -337,13 +337,13 @@ if args.modes == "vi":
 elif args.modes == "vitac":
     modes = [Modes.TACT, Modes.VIZ]
 
-ViTac.binarize_save(bin_duration=args.bin_duration, modes=modes)
+#ViTac.binarize_save(bin_duration=args.bin_duration, modes=modes)
 
 # TAS edited ------------------------------------
 remove_outlier = args.remove_outlier
 from sklearn.model_selection import StratifiedKFold
 
-if remove_outlier:
+if remove_outlier == 1:
     path_outlier = "/home/tasbolat/some_python_examples/VT_SNN/auxillary_files/"
     remove_list = np.loadtxt(path_outlier + 'blacklisted.txt').astype(int)
 
@@ -355,7 +355,8 @@ for obj in list_of_objects2:
     current_label += 1
     for i in range(0, args.n_sample_per_object):
         overall_count+=1
-        if remove_outlier:
+        if remove_outlier == 1:
+            print('yess')
             if overall_count in remove_list[:,0]:
                 continue
         labels.append([overall_count, current_label])

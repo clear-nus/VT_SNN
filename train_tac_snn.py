@@ -33,11 +33,18 @@ parser.add_argument(
     "--hidden_size", type=int, help="Size of hidden layer.", required=True
 )
 parser.add_argument(
-    "--theta", type=int, help="SRM threshold.", required=True
+    "--theta", type=float, help="SRM threshold.", required=True
 )
+
+parser.add_argument(
+    "--tauRho", type=float, help="spike pdf parameter.", required=True
+)
+
+
 parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
+
 parser.add_argument(
     "--output_size", type=int, help="Number of classes", default=20
 )
@@ -50,7 +57,7 @@ params = {
         "tauSr": 10.0,
         "tauRef": 1.0,
         "scaleRef": 2,
-        "tauRho": 1,
+        "tauRho": args.tauRho, # 1
         "scaleRho": 1,
     },
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
@@ -70,7 +77,7 @@ params = {
 input_size = 156  # Tact
 output_size = args.output_size # 20
 
-device = torch.device("cuda:1")
+device = torch.device("cuda:2")
 writer = SummaryWriter(".")
 net = SlayerMLP(params, input_size, args.hidden_size, output_size).to(device)
 
