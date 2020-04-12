@@ -270,7 +270,7 @@ class ViTacData:
         self.selection = selection
 
     def binarize_save(self, bin_duration, modes=[Modes.TACT, Modes.VIZ]):
-        "saves binarized tactile and prophesee data"
+        "saves binned tactile and prophesee data"
         overall_count = 0
         big_list_tact = []
         big_list_vis = []

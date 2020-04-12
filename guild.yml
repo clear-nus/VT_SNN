@@ -33,6 +33,7 @@
         - sc_true
         - sc_false
         - lr
+        - theta
         - sample_file
         - hidden_size
         - output_size
@@ -46,6 +47,7 @@
         tsr_stop: 325
         sc_true: 150
         sc_false: 5
+        theta: 10
         sample_file: 1
         hidden_size: 32
         checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
@@ -57,6 +59,7 @@
         - =sc_true
         - =sc_false
         - =lr
+        - =theta
         - =sample_file
         - =hidden_size
         - l1_loss/train as l1_loss_train

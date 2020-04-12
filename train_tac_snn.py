@@ -33,6 +33,9 @@ parser.add_argument(
     "--hidden_size", type=int, help="Size of hidden layer.", required=True
 )
 parser.add_argument(
+    "--theta", type=int, help="SRM threshold.", required=True
+)
+parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
 parser.add_argument(
@@ -43,7 +46,7 @@ args = parser.parse_args()
 params = {
     "neuron": {
         "type": "SRMALPHA",
-        "theta": 10,
+        "theta": args.theta, # 10
         "tauSr": 10.0,
         "tauRef": 1.0,
         "scaleRef": 2,
@@ -67,7 +70,7 @@ params = {
 input_size = 156  # Tact
 output_size = args.output_size # 20
 
-device = torch.device("cuda:2")
+device = torch.device("cuda:1")
 writer = SummaryWriter(".")
 net = SlayerMLP(params, input_size, args.hidden_size, output_size).to(device)
 
