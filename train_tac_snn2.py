@@ -40,6 +40,7 @@ parser.add_argument(
     "--tauRho", type=float, help="spike pdf parameter.", required=True
 )
 
+
 parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
@@ -80,7 +81,7 @@ device = torch.device("cuda:2")
 writer = SummaryWriter(".")
 net = SlayerMLP(params, input_size, args.hidden_size, output_size).to(device)
 
-error = snn.loss(params).to(device)
+#error = snn.loss(params).to(device)
 optimizer = torch.optim.RMSprop(
     net.parameters(), lr=args.lr, weight_decay=0.5
 )
@@ -117,6 +118,43 @@ def l2_reg(spike_trains):
 class Losses:
     SPIKE, L1, L2 = range(3)
 
+# calculate weights
+aa = np.flip( np.arange(1, args.tsample+1, dtype=float) )
+pW = torch.FloatTensor( aa.copy() )
+pW = pW.expand([args.output_size, 1, 1,args.tsample])
+pW.requires_grad = False
+slayer = snn.layer(params["neuron"], params["simulation"]).to(device)
+
+def weightedNumSpikes(spikeOut, desiredClass, numSpikesScale=1):
+    # Tested with autograd, it works
+    tgtSpikeRegion = args.sc_true
+    tgtSpikeCount  = args.sc_false
+    startID = np.rint( 0 / params['simulation']['Ts'] ).astype(int)
+    stopID  = np.rint( args.tsr_stop /  params['simulation']['Ts'] ).astype(int)
+    
+    _pW = pW.expand([spikeOut.shape[0], pW.shape[0], pW.shape[1], pW.shape[2], pW.shape[3]]).clone()
+    _pW.requires_grad = False
+    
+    spikeOut2 = torch.mul(spikeOut, _pW.to(device))
+    desiredClass2 = torch.mul(desiredClass, _pW.to(device))
+    actualSpikes = torch.sum(spikeOut2[...,startID:stopID], 4, keepdim=True).cpu().detach().numpy() * params['simulation']['Ts']
+    desiredSpikes = torch.sum(desiredClass2[...,startID:stopID], 4, keepdim=True).cpu().detach().numpy() * params['simulation']['Ts']
+    #desiredSpikes = np.where(desiredClass.cpu() == True, tgtSpikeCount[True], tgtSpikeCount[False])
+    # print('actualSpikes :', actualSpikes.flatten())
+    # print('desiredSpikes:', desiredSpikes.flatten())
+    errorSpikeCount = (actualSpikes - desiredSpikes) / (stopID - startID) * numSpikesScale
+    targetRegion = np.zeros(spikeOut.shape)
+    targetRegion[:,:,:,:,startID:stopID] = 1;
+    spikeDesired = torch.FloatTensor(targetRegion * spikeOut.cpu().data.numpy()).to(spikeOut.device)
+
+    # error = self.psp(spikeOut - spikeDesired)
+    error = slayer.psp(spikeOut - spikeDesired)
+    error += torch.FloatTensor(errorSpikeCount*targetRegion).to(spikeOut.device)
+
+    return 1/2 * torch.sum(error**2) * params['simulation']['Ts']
+    
+error = weightedNumSpikes
+
 def _train():
     correct = 0
     num_samples = 0
@@ -125,11 +163,13 @@ def _train():
     for i, (tact, _, target, label) in enumerate(train_loader):
         tact = tact.to(device)
         target = target.to(device)
+        target = target.expand([target.shape[0],target.shape[1],target.shape[2],target.shape[3],args.tsample]).clone()
         output = net.forward(tact)
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
 
-        spike_loss = error.numSpikes(output, target)
+        #spike_loss = error.numSpikes(output, target)
+        spike_loss = error(output, target)
         l1_loss = l1_reg(net.spike_trains)
         l2_loss = l2_reg(net.spike_trains)
         
@@ -159,11 +199,13 @@ def _test():
         for i, (tact, _, target, label) in enumerate(test_loader):
             tact = tact.to(device)
             target = target.to(device)
+            target = target.expand([target.shape[0],target.shape[1],target.shape[2],target.shape[3],args.tsample]).clone()
             output = net.forward(tact)
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            spike_loss = error.numSpikes(output, target)
+            #spike_loss = error.numSpikes(output, target)
+            spike_loss = error(output, target)
             l1_loss = l1_reg(net.spike_trains)
             l2_loss = l2_reg(net.spike_trains)
             
@@ -184,7 +226,7 @@ def _test():
 def _save_model(epoch, loss):
     log.info(f"Writing model at epoch {epoch}...")
     checkpoint_path = (
-        Path(args.checkpoint_dir) / f"weights-{epoch:03d}.pt"
+        Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{loss:0.3f}.pt"
     )
     torch.save(net.state_dict(), checkpoint_path)
 

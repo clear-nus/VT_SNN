@@ -337,7 +337,7 @@ if args.modes == "vi":
 elif args.modes == "vitac":
     modes = [Modes.TACT, Modes.VIZ]
 
-#ViTac.binarize_save(bin_duration=args.bin_duration, modes=modes)
+ViTac.binarize_save(bin_duration=args.bin_duration, modes=modes)
 
 # TAS edited ------------------------------------
 remove_outlier = args.remove_outlier

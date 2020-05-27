@@ -38,7 +38,7 @@ data. To run on beast:
 ```
 2. 
 ```
-    python downsample_images.py --path ../data_VT_SNN --count 400 --network network.yaml
+    python downsample_images.py --path ../data_VT_SNN_2 --count 800 --network network.yaml
 
 ```
 ## Models

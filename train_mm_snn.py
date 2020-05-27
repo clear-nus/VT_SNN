@@ -24,6 +24,9 @@ parser.add_argument("--tsample", type=int, help="tSample", required=True)
 parser.add_argument(
     "--tsr_stop", type=int, help="Target Spike Region Stop", required=True
 )
+parser.add_argument(
+    "--tsr_start", type=int, help="Target Spike Region Start", required=True
+)
 parser.add_argument("--sc_true", type=int, help="Spike Count True", required=True)
 parser.add_argument("--sc_false", type=int, help="Spike Count False", required=True)
 parser.add_argument("--lr", type=float, help="Learning rate.", required=True)
@@ -36,17 +39,24 @@ parser.add_argument(
 parser.add_argument(
     "--output_size", type=int, help="Output Size.", required=True
 )
+parser.add_argument(
+    "--theta", type=float, help="SRM threshold.", required=True
+)
+
+parser.add_argument(
+    "--tauRho", type=float, help="spike pdf parameter.", required=True
+)
 
 args = parser.parse_args()
 
 params = {
     "neuron": {
         "type": "SRMALPHA",
-        "theta": 10,
+        "theta": args.theta,
         "tauSr": 10.0,
         "tauRef": 1.0,
         "scaleRef": 2,
-        "tauRho": 1,
+        "tauRho": args.tauRho, # pdf
         "scaleRho": 1,
     },
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
@@ -55,7 +65,7 @@ params = {
             "type": "NumSpikes",  # "NumSpikes" or "ProbSpikes"
             "probSlidingWin": 20,  # only valid for ProbSpikes
             "tgtSpikeRegion": {  # valid for NumSpikes and ProbSpikes
-                "start": 0,
+                "start": args.tsr_start,
                 "stop": args.tsr_stop,
             },
             "tgtSpikeCount": {True: args.sc_true, False: args.sc_false},
@@ -197,7 +207,7 @@ def _test():
 def _save_model(epoch, loss):
     log.info(f"Writing model at epoch {epoch}...")
     checkpoint_path = (
-        Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{loss:0.3f}.pt"
+        Path(args.checkpoint_dir) / f"weights-{epoch:03d}.pt"
     )
     torch.save(net.state_dict(), checkpoint_path)
 
@@ -205,5 +215,5 @@ for epoch in range(1, args.epochs + 1):
     _train()
     if epoch % 10 == 0:
         test_loss = _test()
-    if epoch % 100 == 0:
+    if epoch % 50 == 0:
         _save_model(epoch, test_loss)

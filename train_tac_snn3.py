@@ -40,6 +40,7 @@ parser.add_argument(
     "--tauRho", type=float, help="spike pdf parameter.", required=True
 )
 
+
 parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
@@ -47,7 +48,17 @@ parser.add_argument(
 parser.add_argument(
     "--output_size", type=int, help="Number of classes", default=20
 )
+parser.add_argument(
+    "--weightFunction", type=int, help="Linear(1), Exp decaying(2), Parabolic(3)", default=1
+)
+
+parser.add_argument(
+    "--weightScale", type=int, help="Weight Scale for exp decaying function", default=100
+)
+
 args = parser.parse_args()
+
+weightFunctionArgument = {1:'Linear', 2:'Exp', 3:None}
 
 params = {
     "neuron": {
@@ -62,16 +73,19 @@ params = {
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
     "training": {
         "error": {
-            "type": "NumSpikes",  # "NumSpikes" or "ProbSpikes"
-            "probSlidingWin": 20,  # only valid for ProbSpikes
-            "tgtSpikeRegion": {  # valid for NumSpikes and ProbSpikes
-                "start": 0,
-                "stop": args.tsr_stop,
-            },
-            "tgtSpikeCount": {True: args.sc_true, False: args.sc_false},
+            "type": "WeightedNumSpikes",  # "NumSpikes" or "ProbSpikes" or "SpikeTrain"
+            "weightFunction": weightFunctionArgument[args.weightFunction], # Exp, None
+            "tauScale": args.weightScale,
+            "tgtFalseSpikeCount": args.sc_false,
         }
     },
 }
+
+if params["training"]["error"]["weightFunction"] == None:
+    t = np.arange(1, args.tsample+1, dtype=float)
+    myWeights = 500 + 5*325**2 + (-5)*( t**2 )
+else:
+    myWeights = None
 
 input_size = 156  # Tact
 output_size = args.output_size # 20
@@ -129,7 +143,7 @@ def _train():
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
 
-        spike_loss = error.numSpikes(output, target)
+        spike_loss = error.weightedNumSpikes(output, target, myWeights, 1000)
         l1_loss = l1_reg(net.spike_trains)
         l2_loss = l2_reg(net.spike_trains)
         
@@ -163,7 +177,7 @@ def _test():
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            spike_loss = error.numSpikes(output, target)
+            spike_loss = error.weightedNumSpikes(output, target, myWeights, 1000)
             l1_loss = l1_reg(net.spike_trains)
             l2_loss = l2_reg(net.spike_trains)
             
@@ -184,6 +198,7 @@ def _test():
 def _save_model(epoch, loss):
     log.info(f"Writing model at epoch {epoch}...")
     checkpoint_path = (
+        #Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{loss:0.3f}.pt"
         Path(args.checkpoint_dir) / f"weights-{epoch:03d}.pt"
     )
     torch.save(net.state_dict(), checkpoint_path)

@@ -3,9 +3,10 @@ import numpy as np
 import slayerSNN as snn
 from pathlib import Path
 import logging
-from snn_models.baseline_snn import SlayerMLP
+#from models.slayer_multimodal import SlayerMM
+from snn_models.multimodal_snn import SlayerMM
 from torch.utils.data import DataLoader
-from dataset import ViTacDataset
+from dataset import ViTacMMDataset
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 
@@ -13,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
 log = logging.getLogger()
 
-parser = argparse.ArgumentParser("Train model.")
+parser = argparse.ArgumentParser("Trainer.")
 parser.add_argument("--epochs", type=int, help="Number of epochs.", required=True)
 parser.add_argument("--data_dir", type=str, help="Path to data.", required=True)
 parser.add_argument(
@@ -30,34 +31,23 @@ parser.add_argument(
     "--sample_file", type=int, help="Sample number to train from.", required=True
 )
 parser.add_argument(
-    "--hidden_size", type=int, help="Size of hidden layer.", required=True
-)
-parser.add_argument(
-    "--theta", type=float, help="SRM threshold.", required=True
-)
-
-parser.add_argument(
-    "--tauRho", type=float, help="spike pdf parameter.", required=True
-)
-
-parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
-
 parser.add_argument(
-    "--output_size", type=int, help="Number of classes", default=20
+    "--output_size", type=int, help="Output Size.", required=True
 )
+
 args = parser.parse_args()
 
 params = {
     "neuron": {
         "type": "SRMALPHA",
-        "theta": args.theta, # activation threshold
-        "tauSr": 10.0, # time constant for srm kernel
-        "tauRef": 10.0, # refractory kernel time constant
-        "scaleRef": 2, # refractory kernel constant relative to theta
-        "tauRho": args.tauRho, # pdf
-        "scaleRho": 1, # membrane potential 
+        "theta": 10,
+        "tauSr": 10.0,
+        "tauRef": 1.0,
+        "scaleRef": 2,
+        "tauRho": 1,
+        "scaleRho": 1,
     },
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
     "training": {
@@ -73,26 +63,23 @@ params = {
     },
 }
 
-input_size = 156  # Tact
-output_size = args.output_size # 20
-
-device = torch.device("cuda:2")
+device = torch.device("cuda:1")
 writer = SummaryWriter(".")
-net = SlayerMLP(params, input_size, args.hidden_size, output_size).to(device)
+net = SlayerMM(params, args.output_size).to(device)
 
-error = snn.loss(params).to(device)
+#error = snn.loss(params).to(device)
 optimizer = torch.optim.RMSprop(
     net.parameters(), lr=args.lr, weight_decay=0.5
 )
 
-train_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=output_size
+train_dataset = ViTacMMDataset(
+    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=args.output_size
 )
 train_loader = DataLoader(
-    dataset=train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
+    dataset=train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
 )
-test_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=output_size
+test_dataset = ViTacMMDataset(
+    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=args.output_size
 )
 test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
@@ -104,6 +91,12 @@ def l1_reg(spike_trains):
         loss += torch.mean(st)
     return loss
 
+def l2_weight_reg(network):
+    l2_reg = torch.tensor(0.)
+    for param in network.parameters():
+        l2_reg += torch.norm(param)
+    return l2_reg
+
 def l2_reg(spike_trains):
     loss = torch.tensor(0.0).to(device)
     for st in spike_trains:
@@ -114,30 +107,91 @@ def l2_reg(spike_trains):
         loss += l2_per_neuron_spike_loss
     return loss
 
+def fano_reg(spike_trains):
+    loss = torch.tensor(0.0).to(device)
+    for st in spike_trains:     # B N 1 1 T
+        st = torch.einsum("bnijt->nbijt", st)
+        st = st.reshape(st.shape[0], st.shape[1], -1)
+        st = st.sum(-1)
+        fanos = torch.tensor([N.var() / N.mean() for N in st])
+        fanos = fanos[~torch.isnan(fanos)]
+        loss += torch.mean(fanos)
+    return loss
+
+def fano_var_reg(spike_trains):
+    loss = torch.tensor(0.0).to(device)
+    for st in spike_trains:     # B N 1 1 T
+        st = torch.einsum("bnijt->nbijt", st)
+        st = st.reshape(st.shape[0], st.shape[1], -1)
+        st = st.sum(-1)
+        fano_vars = torch.var(st, dim=1)
+        loss += torch.mean(fano_vars)
+    return loss
+
 class Losses:
     SPIKE, L1, L2 = range(3)
 
+    
+
+# calculate weights
+aa = np.flip( np.arange(1, args.tsample+1, dtype=float) )
+pW = torch.FloatTensor( aa.copy() )
+pW = pW.expand([args.output_size, 1, 1,args.tsample])
+pW.requires_grad = False
+slayer = snn.layer(params["neuron"], params["simulation"]).to(device)
+
+def weightedNumSpikes(spikeOut, desiredClass, numSpikesScale=1):
+    # Tested with autograd, it works
+    tgtSpikeRegion = args.sc_true
+    tgtSpikeCount  = args.sc_false
+    startID = np.rint( 0 / params['simulation']['Ts'] ).astype(int)
+    stopID  = np.rint( args.tsr_stop /  params['simulation']['Ts'] ).astype(int)
+    
+    _pW = pW.expand([spikeOut.shape[0], pW.shape[0], pW.shape[1], pW.shape[2], pW.shape[3]]).clone()
+    _pW.requires_grad = False
+    
+    spikeOut2 = torch.mul(spikeOut, _pW.to(device))
+    desiredClass2 = torch.mul(desiredClass, _pW.to(device))
+    actualSpikes = torch.sum(spikeOut2[...,startID:stopID], 4, keepdim=True).cpu().detach().numpy() * params['simulation']['Ts']
+    desiredSpikes = torch.sum(desiredClass2[...,startID:stopID], 4, keepdim=True).cpu().detach().numpy() * params['simulation']['Ts']
+    #desiredSpikes = np.where(desiredClass.cpu() == True, tgtSpikeCount[True], tgtSpikeCount[False])
+    # print('actualSpikes :', actualSpikes.flatten())
+    # print('desiredSpikes:', desiredSpikes.flatten())
+    errorSpikeCount = (actualSpikes - desiredSpikes) / (stopID - startID) * numSpikesScale
+    targetRegion = np.zeros(spikeOut.shape)
+    targetRegion[:,:,:,:,startID:stopID] = 1;
+    spikeDesired = torch.FloatTensor(targetRegion * spikeOut.cpu().data.numpy()).to(spikeOut.device)
+
+    # error = self.psp(spikeOut - spikeDesired)
+    error = slayer.psp(spikeOut - spikeDesired)
+    error += torch.FloatTensor(errorSpikeCount*targetRegion).to(spikeOut.device)
+
+    return 1/2 * torch.sum(error**2) * params['simulation']['Ts']
+    
+error = weightedNumSpikes
+    
 def _train():
     correct = 0
     num_samples = 0
     losses = [0, 0, 0]
     net.train()
-    for i, (tact, _, target, label) in enumerate(train_loader):
+    for i, (tact, vis, target, label) in enumerate(train_loader):
         tact = tact.to(device)
+        vis = vis.to(device)
         target = target.to(device)
-        output = net.forward(tact)
+        output = net.forward(tact, vis)
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
 
-        spike_loss = error.numSpikes(output, target)
+        #spike_loss = error.numSpikes(output, target)
+        spike_loss = error(output, target)
         l1_loss = l1_reg(net.spike_trains)
         l2_loss = l2_reg(net.spike_trains)
-        
-        loss = spike_loss
-
         losses[Losses.L1] += l1_loss
         losses[Losses.L2] += l2_loss
         losses[Losses.SPIKE] += spike_loss
+        
+        loss = spike_loss
 
         optimizer.zero_grad()
         loss.backward()
@@ -156,19 +210,19 @@ def _test():
     losses = [0, 0, 0]
     net.eval()
     with torch.no_grad():
-        for i, (tact, _, target, label) in enumerate(test_loader):
+        for i, (tact, vis, target, label) in enumerate(test_loader):
             tact = tact.to(device)
+            vis = vis.to(device)
             target = target.to(device)
-            output = net.forward(tact)
+            output = net.forward(tact, vis)
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            spike_loss = error.numSpikes(output, target)
+            #spike_loss = error.numSpikes(output, target)
+            spike_loss = error(output, target)
             l1_loss = l1_reg(net.spike_trains)
             l2_loss = l2_reg(net.spike_trains)
             
-            loss = spike_loss
-
             losses[Losses.L1] += l1_loss
             losses[Losses.L2] += l2_loss
             losses[Losses.SPIKE] += spike_loss
@@ -184,7 +238,7 @@ def _test():
 def _save_model(epoch, loss):
     log.info(f"Writing model at epoch {epoch}...")
     checkpoint_path = (
-        Path(args.checkpoint_dir) / f"weights-{epoch:03d}.pt"
+        Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{loss:0.3f}.pt"
     )
     torch.save(net.state_dict(), checkpoint_path)
 

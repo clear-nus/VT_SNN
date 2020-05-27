@@ -3,9 +3,9 @@ import numpy as np
 import slayerSNN as snn
 from pathlib import Path
 import logging
-from snn_models.baseline_snn import SlayerMLP
+from snn_models.multimodal_snn import EncoderVis
 from torch.utils.data import DataLoader
-from dataset import ViTacDataset
+from dataset import ViTacVisDataset
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 
@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
 log = logging.getLogger()
 
-parser = argparse.ArgumentParser("Train model.")
+parser = argparse.ArgumentParser("Train Viz model.")
 parser.add_argument("--epochs", type=int, help="Number of epochs.", required=True)
 parser.add_argument("--data_dir", type=str, help="Path to data.", required=True)
 parser.add_argument(
@@ -30,7 +30,17 @@ parser.add_argument(
     "--sample_file", type=int, help="Sample number to train from.", required=True
 )
 parser.add_argument(
-    "--hidden_size", type=int, help="Size of hidden layer.", required=True
+    "--batch_size", type=int, help="Batch Size.", required=True
+)
+parser.add_argument(
+    "--output_size", type=int, help="Output Size.", required=True
+)
+parser.add_argument(
+    "--weightFunction", type=int, help="Linear(1), Exp decaying(2), Parabolic(3)", default=1
+)
+
+parser.add_argument(
+    "--weightScale", type=int, help="Weight Scale for exp decaying function", default=100
 )
 parser.add_argument(
     "--theta", type=float, help="SRM threshold.", required=True
@@ -40,14 +50,10 @@ parser.add_argument(
     "--tauRho", type=float, help="spike pdf parameter.", required=True
 )
 
-parser.add_argument(
-    "--batch_size", type=int, help="Batch Size.", required=True
-)
-
-parser.add_argument(
-    "--output_size", type=int, help="Number of classes", default=20
-)
 args = parser.parse_args()
+
+weightFunctionArgument = {1:'Linear', 2:'Exp', 3:None}
+
 
 params = {
     "neuron": {
@@ -62,37 +68,39 @@ params = {
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
     "training": {
         "error": {
-            "type": "NumSpikes",  # "NumSpikes" or "ProbSpikes"
-            "probSlidingWin": 20,  # only valid for ProbSpikes
-            "tgtSpikeRegion": {  # valid for NumSpikes and ProbSpikes
-                "start": 0,
-                "stop": args.tsr_stop,
-            },
-            "tgtSpikeCount": {True: args.sc_true, False: args.sc_false},
+            "type": "WeightedNumSpikes",  # "NumSpikes" or "ProbSpikes" or "SpikeTrain"
+            "weightFunction": weightFunctionArgument[args.weightFunction], # Exp, None
+            "tauScale": args.weightScale,
+            "tgtFalseSpikeCount": args.sc_false,
         }
     },
 }
 
-input_size = 156  # Tact
-output_size = args.output_size # 20
+if params["training"]["error"]["weightFunction"] == None:
+    t = np.arange(1, args.tsample+1, dtype=float)
+    myWeights = 500 + 5*325**2 + (-5)*( t**2 )
+else:
+    myWeights = None
 
-device = torch.device("cuda:2")
+input_size = 156  # Tact
+
+device = torch.device("cuda:0")
 writer = SummaryWriter(".")
-net = SlayerMLP(params, input_size, args.hidden_size, output_size).to(device)
+net = EncoderVis(params, args.output_size).to(device)
 
 error = snn.loss(params).to(device)
 optimizer = torch.optim.RMSprop(
     net.parameters(), lr=args.lr, weight_decay=0.5
 )
 
-train_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=output_size
+train_dataset = ViTacVisDataset(
+    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=args.output_size
 )
 train_loader = DataLoader(
     dataset=train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
 )
-test_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=output_size
+test_dataset = ViTacVisDataset(
+    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=args.output_size
 )
 test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
@@ -104,6 +112,12 @@ def l1_reg(spike_trains):
         loss += torch.mean(st)
     return loss
 
+def l2_weight_reg(network):
+    l2_reg = torch.tensor(0.)
+    for param in network.parameters():
+        l2_reg += torch.norm(param)
+    return l2_reg
+
 def l2_reg(spike_trains):
     loss = torch.tensor(0.0).to(device)
     for st in spike_trains:
@@ -114,6 +128,27 @@ def l2_reg(spike_trains):
         loss += l2_per_neuron_spike_loss
     return loss
 
+def fano_reg(spike_trains):
+    loss = torch.tensor(0.0).to(device)
+    for st in spike_trains:     # B N 1 1 T
+        st = torch.einsum("bnijt->nbijt", st)
+        st = st.reshape(st.shape[0], st.shape[1], -1)
+        st = st.sum(-1)
+        fanos = torch.tensor([N.var() / N.mean() for N in st])
+        fanos = fanos[~torch.isnan(fanos)]
+        loss += torch.mean(fanos)
+    return loss
+
+def fano_var_reg(spike_trains):
+    loss = torch.tensor(0.0).to(device)
+    for st in spike_trains:     # B N 1 1 T
+        st = torch.einsum("bnijt->nbijt", st)
+        st = st.reshape(st.shape[0], st.shape[1], -1)
+        st = st.sum(-1)
+        fano_vars = torch.var(st, dim=1)
+        loss += torch.mean(fano_vars)
+    return loss
+
 class Losses:
     SPIKE, L1, L2 = range(3)
 
@@ -122,14 +157,14 @@ def _train():
     num_samples = 0
     losses = [0, 0, 0]
     net.train()
-    for i, (tact, _, target, label) in enumerate(train_loader):
-        tact = tact.to(device)
+    for i, (vis, target, label) in enumerate(train_loader):
+        vis = vis.to(device)
         target = target.to(device)
-        output = net.forward(tact)
+        output = net.forward(vis)
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
 
-        spike_loss = error.numSpikes(output, target)
+        spike_loss = error.weightedNumSpikes(output, target, myWeights, 1000)
         l1_loss = l1_reg(net.spike_trains)
         l2_loss = l2_reg(net.spike_trains)
         
@@ -156,14 +191,14 @@ def _test():
     losses = [0, 0, 0]
     net.eval()
     with torch.no_grad():
-        for i, (tact, _, target, label) in enumerate(test_loader):
-            tact = tact.to(device)
+        for i, (vis, target, label) in enumerate(test_loader):
+            vis = vis.to(device)
             target = target.to(device)
-            output = net.forward(tact)
+            output = net.forward(vis)
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            spike_loss = error.numSpikes(output, target)
+            spike_loss = error.weightedNumSpikes(output, target, myWeights, 1000)
             l1_loss = l1_reg(net.spike_trains)
             l2_loss = l2_reg(net.spike_trains)
             
@@ -192,5 +227,5 @@ for epoch in range(1, args.epochs + 1):
     _train()
     if epoch % 10 == 0:
         test_loss = _test()
-    if epoch % 100 == 0:
+    if epoch % 50 == 0:
         _save_model(epoch, test_loss)

@@ -18,6 +18,7 @@ from utils.models import Classifier
 import logging
 import argparse
 from torch.utils.tensorboard import SummaryWriter
+from pathlib import Path
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -64,7 +65,7 @@ class RawDataset(Dataset):
 # In[15]:
 
 
-device = torch.device('cuda:1')
+device = torch.device('cuda:2')
 writer = SummaryWriter(".")
 
 
@@ -97,15 +98,15 @@ flags = FLAGS()
 
 
 # Dataset and dataLoader instances.
-split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
+#split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
 
     
 trainingSet = RawDataset(datasetPath = args.data_dir + 'vis_rpg_data/', 
-                        sampleFile = args.data_dir + "/train_" + split_list[args.sample_file] + ".txt")
+                        sampleFile = args.data_dir + "/train_80_20_" + str(args.sample_file) + ".txt")
 train_loader = Loader(trainingSet, flags, device=device)    
 
 testingSet = RawDataset(datasetPath = args.data_dir + 'vis_rpg_data/', 
-                        sampleFile  = args.data_dir + "/test_" + split_list[args.sample_file] + ".txt")
+                        sampleFile  = args.data_dir + "/test_80_20_" + str(args.sample_file) + ".txt")
 test_loader = Loader(testingSet, flags, device=device)
 in1, _  = trainingSet[7]
 in1.shape
@@ -121,7 +122,12 @@ lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, 0.5)
 
 criterion = torch.nn.CrossEntropyLoss()
 
-
+def _save_model(epoch):
+    log.info(f"Writing model at epoch {epoch}...")
+    checkpoint_path = (
+        Path(args.checkpoint_dir) / f"weights-{epoch:03d}.pt"
+    )
+    torch.save(model.state_dict(), checkpoint_path)
 
 for epoch in range(1, args.epochs+1):
     sum_loss = 0
@@ -159,3 +165,5 @@ for epoch in range(1, args.epochs+1):
     validation_accuracy = correct / len(testingSet)
     writer.add_scalar("loss/test", validation_loss, epoch)
     writer.add_scalar("acc/test", validation_accuracy, epoch)
+
+_save_model(args.epochs)

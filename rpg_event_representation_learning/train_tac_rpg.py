@@ -13,6 +13,7 @@
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 import torch
+from pathlib import Path
 import numpy as np
 from utils.models2 import Classifier
 import torch.nn as nn
@@ -63,7 +64,7 @@ class RawDataset(Dataset):
         return self.samples.shape[0]
 
 
-device = torch.device('cuda:2')
+device = torch.device('cuda:1')
 writer = SummaryWriter(".")
 
 
@@ -87,7 +88,7 @@ flags = FLAGS()
 
 
 # Dataset and dataLoader instances.
-split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
+#split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
 
     
 trainingSet = RawDataset(datasetPath = args.data_dir + 'tact_rpg_data/', 
@@ -112,6 +113,13 @@ lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, 0.5)
 
 criterion = torch.nn.CrossEntropyLoss()
 
+
+def _save_model(epoch):
+    log.info(f"Writing model at epoch {epoch}...")
+    checkpoint_path = (
+        Path(args.checkpoint_dir) / f"weights-{epoch:03d}.pt"
+    )
+    torch.save(model.state_dict(), checkpoint_path)
 
 for epoch in range(1, args.epochs+1):
     sum_loss = 0
@@ -149,3 +157,6 @@ for epoch in range(1, args.epochs+1):
     validation_accuracy = correct / len(testingSet)
     writer.add_scalar("loss/test", validation_loss, epoch)
     writer.add_scalar("acc/test", validation_accuracy, epoch)
+    
+# save model
+_save_model(args.epochs)           
