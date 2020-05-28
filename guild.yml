@@ -27,7 +27,7 @@
         tsample: 325
         tauRho: 1
         count: 400 # total number of samples
-    tact:
+    tact-snn:
       description: Train tactile model using SNN
       main: train_tac_snn
       output-scalars: no
@@ -79,3 +79,121 @@
         - max acc/test as max_acc_test
         - acc/test as acc_test
         - acc/train as acc_train
+    vis-snn:
+      description: Train vizual model
+      main: train_vis_snn
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - tsample
+        - tsr_start
+        - tsr_stop
+        - sc_true
+        - sc_false
+        - lr
+        - sample_file
+        - output_size
+        - checkpoint_dir
+        - theta
+        - tauRho
+      flags:
+        batch_size: 8
+        epochs: 500
+        lr: 0.001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        tsample: 325
+        tsr_start: 0
+        tsr_stop: 325
+        sc_true: 150
+        sc_false: 5
+        sample_file: 1
+        output_size: 20
+        theta: 10
+        tauRho: 1
+        checkpoint_dir: .
+      compare:
+        - =batch_size
+        - =epochs
+        - =tsample
+        - =tsr_stop
+        - =sc_true
+        - =sc_false
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =theta
+        - =tauRho
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - acc/train as acc_train
+        - loss/test as loss_test
+        - acc/test as acc_test
+        - max acc/test as max_acc_test
+   mm:
+      description: Train MM model
+      main: train_mm_snn
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - tsample
+        - tsr_start
+        - tsr_stop
+        - sc_true
+        - sc_false
+        - lr
+        - sample_file
+        - r_l1
+        - r_l2
+        - theta
+        - tauRho
+        - output_size
+      flags:
+        batch_size:
+          default: 8
+        epochs:
+          default: 500
+        lr:
+          default: 0.001
+        data_dir:
+          default: /home/tasbolat/some_python_examples/data_VT_SNN_new
+        tsample:
+          default: 325
+        tsr_start:
+          default: 0
+        tsr_stop:
+          default: 325
+        sc_true:
+          default: 150
+        sc_false:
+          default: 5
+        sample_file:
+          default: 1        
+        output_size:
+          default: 20
+        checkpoint_dir: .
+        theta: 10
+        tauRho: 1
+      compare:
+        - =batch_size
+        - =prob
+        - =epochs
+        - =tsample
+        - =tsr_stop
+        - =sc_true
+        - =sc_false
+        - =lr
+        - =sample_file
+        - =theta
+        - =tauRho
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+        - max acc/test as max_acc_test
