@@ -34,7 +34,7 @@ selections = {  # index, offset, length
 }
 
 class Modes:
-    TACT, VIZ = range(2)
+    TACT, VIS = range(2)
 
 
 parser = argparse.ArgumentParser(description="Data preprocessor.")
@@ -82,15 +82,29 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+# THIS READ TACTILE CODE for new sensors
+# def read_tactile_file(tactile_path, obj_name):
+#     """Reads a tactile file from path. Returns a pandas dataframe."""
+#     obj_path = Path(tactile_path) / f"{obj_name}.tact"
+#     df = pd.read_csv(
+#         obj_path,
+#         delimiter=" ",
+#         names=["polarity", "cell_index", "timestamp"],
+#         dtype={'polarity': int, 'cell_index': int, 'timestamp': float}
+#     )
+#     return df
+
 def read_tactile_file(tactile_path, obj_name):
     """Reads a tactile file from path. Returns a pandas dataframe."""
     obj_path = Path(tactile_path) / f"{obj_name}.tact"
     df = pd.read_csv(
         obj_path,
         delimiter=" ",
-        names=["polarity", "cell_index", "timestamp"],
-        dtype={'polarity': int, 'cell_index': int, 'timestamp': float}
+        names=["polarity", "cell_index", "timestamp_sec", "timestamp_nsec"],
+        dtype=int,
     )
+    df = df.assign(timestamp=df.timestamp_sec + df.timestamp_nsec / 1000000000)
+    df = df.drop(["timestamp_sec", "timestamp_nsec"], axis=1)
     return df
 
 
@@ -249,6 +263,10 @@ def tact_bin_save(file_name, overall_count, bin_duration, selection, save_dir):
     tac_data = TactileData(file_name, selection)
     tacData = tac_data.binarize(bin_duration)
     f = save_dir / f"{overall_count}_tact.npy"
+    if overall_count == 0:
+        print(tacData.shape)
+        a,b = np.unique(tacData, return_counts=True)
+        print(a, b)
     log.info(f"Writing {f}...")
     np.save(f, tacData.astype(np.uint8))
 
@@ -269,7 +287,7 @@ class ViTacData:
         self.save_dir = save_dir
         self.selection = selection
 
-    def binarize_save(self, bin_duration, modes=[Modes.TACT, Modes.VIZ]):
+    def binarize_save(self, bin_duration, modes=[Modes.TACT, Modes.VIS]):
         "saves binned tactile and prophesee data"
         overall_count = 0
         big_list_tact = []
@@ -287,7 +305,7 @@ class ViTacData:
                             self.save_dir,
                         ]
                     )
-                if Modes.VIZ in modes:
+                if Modes.VIS in modes:
                     big_list_vis.append(
                         [
                             file_name,
@@ -300,7 +318,7 @@ class ViTacData:
                 overall_count += 1
         if Modes.TACT in modes:
             Parallel(n_jobs=18)(delayed(tact_bin_save)(*zz) for zz in big_list_tact)
-        if Modes.VIZ in modes:
+        if Modes.VIS in modes:
             Parallel(n_jobs=18)(delayed(vis_bin_save)(*zz) for zz in big_list_vis)
 
 
@@ -330,22 +348,18 @@ list_of_objects2 = [
 
 ViTac = ViTacData(Path(args.save_dir), list_of_objects2, selection=args.selection)
 
-modes = [Modes.TACT]
+modes = []
 
 if args.modes == "vi":
-    modes = [Modes.VIZ]
+    modes.append( Modes.VIS) 
+elif args.modes == "tac":
+    modes.append(Modes.TACT)
 elif args.modes == "vitac":
-    modes = [Modes.TACT, Modes.VIZ]
+    modes.append(Modes.TACT)
+    modes.append(Modes.VIS)
 
 ViTac.binarize_save(bin_duration=args.bin_duration, modes=modes)
 
-# TAS edited ------------------------------------
-remove_outlier = args.remove_outlier
-from sklearn.model_selection import StratifiedKFold
-
-if remove_outlier == 1:
-    path_outlier = "/home/tasbolat/some_python_examples/VT_SNN/auxillary_files/"
-    remove_list = np.loadtxt(path_outlier + 'blacklisted.txt').astype(int)
 
 # create labels
 labels = []
@@ -355,14 +369,12 @@ for obj in list_of_objects2:
     current_label += 1
     for i in range(0, args.n_sample_per_object):
         overall_count+=1
-        if remove_outlier == 1:
-            print('yess')
-            if overall_count in remove_list[:,0]:
-                continue
         labels.append([overall_count, current_label])
 labels = np.array(labels)
 
 # stratified k fold
+from sklearn.model_selection import StratifiedKFold
+
 skf = StratifiedKFold(n_splits=5, random_state=100, shuffle=True)
 train_indices = []
 test_indices = []
