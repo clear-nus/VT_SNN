@@ -134,7 +134,7 @@
         - loss/test as loss_test
         - acc/test as acc_test
         - max acc/test as max_acc_test
-   mm:
+    mm:
       description: Train MM model
       main: train_mm_snn
       output-scalars: no
