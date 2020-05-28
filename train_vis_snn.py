@@ -4,6 +4,7 @@ import slayerSNN as snn
 from pathlib import Path
 import logging
 from snn_models.multimodal_snn import EncoderVis
+from snn_models.baseline_snn import SlayerMLP
 from torch.utils.data import DataLoader
 from dataset import ViTacVisDataset
 from torch.utils.tensorboard import SummaryWriter
