@@ -54,7 +54,7 @@ params = {
         "type": "SRMALPHA",
         "theta": args.theta,
         "tauSr": 10.0,
-        "tauRef": 1.0,
+        "tauRef": 10.0,
         "scaleRef": 2,
         "tauRho": args.tauRho, # pdf
         "scaleRho": 1,

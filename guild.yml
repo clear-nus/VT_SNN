@@ -134,7 +134,7 @@
         - loss/test as loss_test
         - acc/test as acc_test
         - max acc/test as max_acc_test
-    mm:
+    mm-snn:
       description: Train MM model
       main: train_mm_snn
       output-scalars: no
@@ -150,8 +150,6 @@
         - sc_false
         - lr
         - sample_file
-        - r_l1
-        - r_l2
         - theta
         - tauRho
         - output_size

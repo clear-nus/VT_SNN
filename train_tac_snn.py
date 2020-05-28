@@ -54,7 +54,7 @@ params = {
         "type": "SRMALPHA",
         "theta": args.theta, # activation threshold
         "tauSr": 10.0, # time constant for srm kernel
-        "tauRef": 10.0, # refractory kernel time constant
+        "tauRef": 1.0, # refractory kernel time constant
         "scaleRef": 2, # refractory kernel constant relative to theta
         "tauRho": args.tauRho, # pdf
         "scaleRho": 1, # membrane potential 
@@ -62,8 +62,7 @@ params = {
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
     "training": {
         "error": {
-            "type": "NumSpikes",  # "NumSpikes" or "ProbSpikes"
-            "probSlidingWin": 20,  # only valid for ProbSpikes
+            "type": "WeightedNumSpikes",  # "NumSpikes" or "WeightedNumSpikes"
             "tgtSpikeRegion": {  # valid for NumSpikes and ProbSpikes
                 "start": 0,
                 "stop": args.tsr_stop,
@@ -110,7 +109,7 @@ def _train():
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
 
-        spike_loss = error.numSpikes(output, target)
+        spike_loss = error.weightedNumSpikes(output, target) # numSpikes
         loss = spike_loss
 
         optimizer.zero_grad()
@@ -135,7 +134,7 @@ def _test():
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            spike_loss = error.numSpikes(output, target)
+            spike_loss = error.weightedNumSpikes(output, target) # numSpikes
             loss = spike_loss
 
         writer.add_scalar("loss/test", spike_loss / len(test_loader), epoch)
