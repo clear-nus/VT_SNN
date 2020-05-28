@@ -76,7 +76,7 @@ params = {
     },
 }
 
-device = torch.device("cuda:1")
+device = torch.device("cuda:0")
 writer = SummaryWriter(".")
 net = SlayerMM(params, args.output_size).to(device)
 
