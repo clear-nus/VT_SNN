@@ -49,8 +49,13 @@ parser.add_argument(
 parser.add_argument(
     "--hidden_size", type=int, help="Size of hidden layer.", required=True
 )
-
+parser.add_argument(
+    "--loss_type", type=int, help="0:numSpikes or 1:weightedNumSpikes", required=True
+)
 args = parser.parse_args()
+
+LOSS_TYPES = ['NumSpikes', 'WeightedNumSpikes']
+
 
 params = {
     "neuron": {
@@ -65,7 +70,7 @@ params = {
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
     "training": {
         "error": {
-            "type": "WeightedNumSpikes",  # "NumSpikes" or "WeightedNumSpikes"
+            "type": LOSS_TYPES[args.loss_type],  # "NumSpikes" or "WeightedNumSpikes"
             "tgtSpikeRegion": {  # valid for NumSpikes and ProbSpikes
                 "start": args.tsr_start,
                 "stop": args.tsr_stop,
@@ -77,13 +82,20 @@ params = {
 
 input_size = 156  # Tact
 
-device = torch.device("cuda:1")
+device = torch.device("cuda:2")
 writer = SummaryWriter(".")
 #net = EncoderVis(params, args.output_size).to(device)
 net = SlayerMLP(params, (50, 63, 2), args.hidden_size, args.output_size).to(device)
 
 
 error = snn.loss(params).to(device)
+
+if args.loss_type == 0:
+    criteria = error.numSpikes
+elif args.loss_type == 0:
+    criteria = error.weightedNumSpikes
+    
+
 optimizer = torch.optim.RMSprop(
     net.parameters(), lr=args.lr, weight_decay=0.5
 )
@@ -113,7 +125,8 @@ def _train():
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
 
-        spike_loss = error.weightedNumSpikes(output, target) # numSpikes
+        #spike_loss = error.numSpikes(output, target) # numSpikes, weightedNumSpikes
+        spike_loss = criteria(output, target)
         
         loss = spike_loss
 
@@ -140,7 +153,8 @@ def _test():
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            spike_loss = error.weightedNumSpikes(output, target) # numSpikes
+            #spike_loss = error.numSpikes(output, target) # numSpikes, weightedNumSpikes
+            spike_loss = criteria(output, target)
             
             loss = spike_loss
 
