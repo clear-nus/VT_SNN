@@ -6,7 +6,7 @@ class EncoderVis(torch.nn.Module):
         super(EncoderVis, self).__init__()
         self.slayer = snn.layer(netParams['neuron'], netParams['simulation'])
         self.fc1   = self.slayer.dense((50, 63, 2), 1024)
-        self.fc1   = self.slayer.dense(1024, output_size)
+        self.fc2   = self.slayer.dense(1024, output_size)
     def forward(self, downsampled):
         spikeLayer1 = self.slayer.spike(self.fc1(self.slayer.psp(downsampled))) # 32, 32, 16
         spikeLayer5 = self.slayer.spike(self.fc2(self.slayer.psp(spikeLayer1))) #  10
