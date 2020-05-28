@@ -89,7 +89,7 @@ error = snn.loss(params).to(device)
 
 if args.loss_type == 0:
     criteria = error.numSpikes
-elif args.loss_type == 0:
+elif args.loss_type == 1:
     criteria = error.weightedNumSpikes
     
 optimizer = torch.optim.RMSprop(
