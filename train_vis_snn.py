@@ -115,8 +115,6 @@ def _train():
         num_samples += len(label)
 
         spike_loss = error.numSpikes(output, target)
-        l1_loss = l1_reg(net.spike_trains)
-        l2_loss = l2_reg(net.spike_trains)
         
         loss = spike_loss
 
