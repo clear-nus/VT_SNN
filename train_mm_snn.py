@@ -62,8 +62,7 @@ params = {
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
     "training": {
         "error": {
-            "type": "NumSpikes",  # "NumSpikes" or "ProbSpikes"
-            "probSlidingWin": 20,  # only valid for ProbSpikes
+            "type": "WeightedNumSpikes",  # "NumSpikes" or "WeightedNumSpikes"
             "tgtSpikeRegion": {  # valid for NumSpikes and ProbSpikes
                 "start": args.tsr_start,
                 "stop": args.tsr_stop,
@@ -108,7 +107,7 @@ def _train():
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
 
-        spike_loss = error.numSpikes(output, target)
+        spike_loss = error.weightedNumSpikes(output, target) # numSpikes
         
         loss = spike_loss
 
@@ -135,7 +134,7 @@ def _test():
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            spike_loss = error.numSpikes(output, target)
+            spike_loss = error.weightedNumSpikes(output, target) # numSpikes
 
 
         writer.add_scalar("loss/test", spike_loss / len(test_loader), epoch)
