@@ -12,7 +12,6 @@
         tactile_path: /datasets/eventdata/batch2/aces_recordings/
         video_path: /datasets/eventdata/batch2/prophesee_recordings/
         trajectory_path: /datasets/eventdata/batch2/traj_start_ends/
-        blacklist_path: /datasets/eventdata/batch2/blacklist.txt
         threshold: 1
         selection: grasp_lift_hold
         modes: vitac # vi, tac, vitac
@@ -27,4 +26,56 @@
         theta: 10
         tsample: 325
         tauRho: 1
-        count: 400
+        count: 400 # total number of samples
+    tact:
+      description: Train tactile model using SNN
+      main: train_tac_snn
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - tsample
+        - tsr_stop
+        - sc_true
+        - sc_false
+        - lr
+        - theta
+        - tauRho
+        - sample_file
+        - hidden_size
+        - output_size
+        - checkpoint_dir
+      flags:
+        batch_size: 8
+        epochs: 500
+        lr: 0.001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        tsample: 325
+        tauRho: 1
+        tsr_stop: 325
+        sc_true: 150
+        sc_false: 5
+        theta: 10
+        sample_file: 1
+        hidden_size: 32
+        checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
+      compare:
+        - =batch_size
+        - =epochs
+        - =tsample
+        - =tsr_stop
+        - =sc_true
+        - =sc_false
+        - =lr
+        - =theta
+        - =tauRho
+        - =sample_file
+        - =hidden_size
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
