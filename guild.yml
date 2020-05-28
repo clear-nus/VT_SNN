@@ -47,6 +47,7 @@
         - hidden_size
         - output_size
         - checkpoint_dir
+        - loss_type
       flags:
         batch_size: 8
         epochs: 500
@@ -60,7 +61,8 @@
         theta: 10
         sample_file: 1
         hidden_size: 32
-        checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
+        checkpoint_dir: . 
+        loss_type: 0
       compare:
         - =batch_size
         - =epochs
@@ -73,6 +75,7 @@
         - =tauRho
         - =sample_file
         - =hidden_size
+        - =loss_type
         - loss/train as loss_train
         - max acc/train as max_acc_train
         - loss/test as loss_test
@@ -100,6 +103,7 @@
         - checkpoint_dir
         - theta
         - tauRho
+        - loss_type
       flags:
         batch_size: 8
         epochs: 500
@@ -116,6 +120,7 @@
         tauRho: 1
         hidden_size: 32
         checkpoint_dir: .
+        loss_type: 0
       compare:
         - =batch_size
         - =epochs
@@ -128,6 +133,7 @@
         - =hidden_size
         - =theta
         - =tauRho
+        - =loss_type
         - loss/train as loss_train
         - max acc/train as max_acc_train
         - acc/train as acc_train
@@ -153,6 +159,7 @@
         - theta
         - tauRho
         - output_size
+        - loss_type
       flags:
         batch_size:
           default: 8
@@ -179,6 +186,7 @@
         checkpoint_dir: .
         theta: 10
         tauRho: 1
+        loss_type: 0
       compare:
         - =batch_size
         - =prob
@@ -191,6 +199,7 @@
         - =sample_file
         - =theta
         - =tauRho
+        - =loss_type
         - loss/train as loss_train
         - max acc/train as max_acc_train
         - loss/test as loss_test

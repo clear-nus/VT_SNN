@@ -46,15 +46,19 @@ parser.add_argument(
 parser.add_argument(
     "--tauRho", type=float, help="spike pdf parameter.", required=True
 )
-
+parser.add_argument(
+    "--loss_type", type=int, help="0:numSpikes or 1:weightedNumSpikes", required=True
+)
 args = parser.parse_args()
+
+LOSS_TYPES = ['NumSpikes', 'WeightedNumSpikes']
 
 params = {
     "neuron": {
         "type": "SRMALPHA",
         "theta": args.theta,
         "tauSr": 10.0,
-        "tauRef": 10.0,
+        "tauRef": 1.0, # 10
         "scaleRef": 2,
         "tauRho": args.tauRho, # pdf
         "scaleRho": 1,
@@ -62,7 +66,7 @@ params = {
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
     "training": {
         "error": {
-            "type": "WeightedNumSpikes",  # "NumSpikes" or "WeightedNumSpikes"
+            "type": LOSS_TYPES[args.loss_type], # "NumSpikes" or "WeightedNumSpikes"
             "tgtSpikeRegion": {  # valid for NumSpikes and ProbSpikes
                 "start": args.tsr_start,
                 "stop": args.tsr_stop,
@@ -77,6 +81,12 @@ writer = SummaryWriter(".")
 net = SlayerMM(params, args.output_size).to(device)
 
 error = snn.loss(params).to(device)
+
+if args.loss_type == 0:
+    criteria = error.numSpikes
+elif args.loss_type == 0:
+    criteria = error.weightedNumSpikes
+
 optimizer = torch.optim.RMSprop(
     net.parameters(), lr=args.lr, weight_decay=0.5
 )
@@ -107,7 +117,8 @@ def _train():
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
 
-        spike_loss = error.weightedNumSpikes(output, target) # numSpikes
+        #spike_loss = error.weightedNumSpikes(output, target) # numSpikes
+        spike_loss = criteria(output, target) # numSpikes
         
         loss = spike_loss
 
@@ -134,7 +145,8 @@ def _test():
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            spike_loss = error.weightedNumSpikes(output, target) # numSpikes
+            #spike_loss = error.weightedNumSpikes(output, target) # numSpikes
+            spike_loss = criteria(output, target) # numSpikes
 
 
         writer.add_scalar("loss/test", spike_loss / len(test_loader), epoch)
