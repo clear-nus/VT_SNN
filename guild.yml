@@ -93,6 +93,7 @@
         - tsr_stop
         - sc_true
         - sc_false
+        - hidden_size
         - lr
         - sample_file
         - output_size
@@ -113,6 +114,7 @@
         output_size: 20
         theta: 10
         tauRho: 1
+        hidden_size: 32
         checkpoint_dir: .
       compare:
         - =batch_size

@@ -45,6 +45,9 @@ parser.add_argument(
 parser.add_argument(
     "--tauRho", type=float, help="spike pdf parameter.", required=True
 )
+parser.add_argument(
+    "--hidden_size", type=int, help="Size of hidden layer.", required=True
+)
 
 args = parser.parse_args()
 
@@ -76,7 +79,9 @@ input_size = 156  # Tact
 
 device = torch.device("cuda:1")
 writer = SummaryWriter(".")
-net = EncoderVis(params, args.output_size).to(device)
+#net = EncoderVis(params, args.output_size).to(device)
+net = SlayerMLP(params, (50, 63, 2), args.hidden_size, args.output_size).to(device)
+
 
 error = snn.loss(params).to(device)
 optimizer = torch.optim.RMSprop(
