@@ -62,7 +62,6 @@ parser.add_argument(
 parser.add_argument(
     "--selection",
     type=str,
-    choices=selections.keys(),
     help="Range of trajectory to process.",
     required=True,
 )

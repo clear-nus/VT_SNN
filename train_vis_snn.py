@@ -82,7 +82,7 @@ params = {
 
 input_size = 156  # Tact
 
-device = torch.device("cuda:2")
+device = torch.device("cuda")
 writer = SummaryWriter(".")
 #net = EncoderVis(params, args.output_size).to(device)
 net = SlayerMLP(params, (50, 63, 2), args.hidden_size, args.output_size).to(device)
