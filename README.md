@@ -29,7 +29,7 @@ of metrics with `guild compare`.
 ## Pre-processing data
 
 Preprocessing involves binning spikes, for both the visual and tactile
-data. To run on beast:
+data.
 
 1. 
 ```
