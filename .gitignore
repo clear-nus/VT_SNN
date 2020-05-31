@@ -1,2 +1,5 @@
 *.pyc 
 *.envrc
+/utility_files/pepsi_1/*
+/utility_files/soy_3/*
+
