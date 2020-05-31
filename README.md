@@ -17,7 +17,7 @@ This git consists of two main parts: object classification and slip detection. F
 
 ## Prerequisits
 
-1. [SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn Spiky Neural Network (SNN)
+1. [SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn a Spiking Neural Network (SNN)
 2. Install package requirements:
 ```
 pip install -r requirements.txt
@@ -38,7 +38,7 @@ data.
 ```
 2. 
 ```
-    python downsample_images.py --path ../data_VT_SNN_2 --count 800 --network network.yaml
+    guild run vtsnn:downsample-vision
 
 ```
 ## Models
@@ -48,38 +48,52 @@ data.
 SNN:
 
 ```
-guild run vtsnn:tact sample_file=1 -b
+guild run vtsnn:tact-snn sample_file=1 -b
 ```
 ANN:
 
 ```
-guild run vtsnn:tact_ann sample_file=1 -b
+guild run vtsnn:tact-ann sample_file=1 -b
+```
+CNN3D:
+
+```
+guild run vtsnn:tact-cnn3d sample_file=1 -b
 ```
 2. Vision unimodal
 
 SNN:
 
 ```
-guild run vtsnn:viz sample_file=1 -b
+guild run vtsnn:vis-snn sample_file=1 -b
 ```
 ANN:
 
 ```
-guild run vtsnn:viz_ann sample_file=1 -b
+guild run vtsnn:vis-ann sample_file=1 -b
+```
+CNN3D:
+
+```
+guild run vtsnn:vis-cnn3d sample_file=1 -b
 ```
 3. Multimodal (tactile + vision)
 
 SNN:
 
 ```
-guild run vtsnn:mm sample_file=1 -b
+guild run vtsnn:mm-snn sample_file=1 -b
 ```
 ANN:
 
 ```
-guild run vtsnn:mm_ann sample_file=1 -b
+guild run vtsnn:mm-ann sample_file=1 -b
 ```
+CNN3D:
 
+```
+guild run vtsnn:mm-cnn3d sample_file=1 -b
+```
 We have also implemented representation learning based on EST (RPG). Within ```rpg_event_representation_learning```, run
 
 1. Tact ETS:
