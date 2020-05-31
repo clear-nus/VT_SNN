@@ -58,7 +58,7 @@ class ViTacDataset(Dataset):
     def __init__(self, datasetPath, sampleFile):
         self.path = datasetPath 
         self.samples = np.loadtxt(sampleFile).astype('int')
-        self.vis = torch.load(Path(self.path+ "pooled_vis/")  / "ds_vis.pt")
+        self.vis = torch.load(Path(self.path)  / "ds_vis.pt")
         tact = torch.load(Path(self.path) / "tact.pt")
         self.tact = tact.reshape(tact.shape[0], -1, tact.shape[-1])
 
@@ -125,7 +125,7 @@ class MultiMLP_LSTM(nn.Module):
 
 # In[74]:
 
-device = torch.device("cuda:1")
+device = torch.device("cuda:2")
 writer = SummaryWriter(".")
 
 

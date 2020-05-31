@@ -77,14 +77,13 @@ split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
 
 
 #data_dir = '/home/tasbolat/some_python_examples/data_VT_SNN/'
-pooled_viz_dir = args.data_dir + "pooled_vis/"
 
 
 #sample_file = 1
-trainingSet = ViTacDataset(datasetPath = pooled_viz_dir, sampleFile = args.data_dir + "/train_" + split_list[args.sample_file-1] + ".txt")
+trainingSet = ViTacDataset(datasetPath = args.data_dir, sampleFile = args.data_dir + "/train_" + split_list[args.sample_file-1] + ".txt")
 train_loader = DataLoader(dataset=trainingSet, batch_size = args.batch_size, shuffle=False, num_workers=8)
  
-testingSet = ViTacDataset(datasetPath = pooled_viz_dir, sampleFile  = args.data_dir + "/test_" + split_list[args.sample_file-1] + ".txt")
+testingSet = ViTacDataset(datasetPath = args.data_dir, sampleFile  = args.data_dir + "/test_" + split_list[args.sample_file-1] + ".txt")
 test_loader = DataLoader(dataset=testingSet, batch_size = args.batch_size, shuffle=False, num_workers=8)
 
 
