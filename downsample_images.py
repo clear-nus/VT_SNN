@@ -4,6 +4,7 @@ import numpy as np
 from torch import nn
 from pathlib import Path
 import slayerSNN as snn
+import torch.nn.functional as F
 
 parser = argparse.ArgumentParser()
 
@@ -29,7 +30,7 @@ params = {
 }
 
 # define average pooling for vision
-class SumPool(nn.Module):
+class SumPool(nn.Module): # outputs spike trains
 
     def __init__(self, netParams):
         super(SumPool, self).__init__()
@@ -39,11 +40,22 @@ class SumPool(nn.Module):
     def forward(self, input_data):
         spike_out = self.slayer.spike(self.pool(self.slayer.psp(input_data)))
         return spike_out
+    
+class AvgPool(nn.Module): # outputs continious time signal
+
+    def __init__(self):
+        super(AvgPool, self).__init__()
+        self.pool = nn.AvgPool3d((1,4,4), padding=[0,1,1], stride=(1,4,4))
+
+    def forward(self, input_data):
+        out_data = F.relu( self.pool(input_data) )
+        return out_data
 
 device = torch.device('cuda:1')
 
     
 net = SumPool(params).to(device)
+net2 = AvgPool().to(device)
 
 tact_arr = []
 
@@ -62,7 +74,9 @@ torch.save(tact, Path(args.path) / "tact.pt")
 
 del tact
 
-ds_vis_arr = []
+ds_vis_spike_arr = []
+ds_vis_non_spike_arr = []
+
 
 print('Starting vision ...')
 
@@ -74,12 +88,19 @@ for i in range(args.count):
     vis = vis.to(device)
    
     with torch.no_grad():
-        vis_pooled = net.forward(vis)
+        vis_pooled_spike = net.forward(vis)
+        vis_pooled_non_spike = net2.forward(vis.permute(0,1,4,2,3))
         
-    ds_vis_arr.append(vis_pooled.detach().cpu().squeeze(0))
+    ds_vis_spike_arr.append(vis_pooled_spike.detach().cpu().squeeze(0))
+    ds_vis_non_spike_arr.append(vis_pooled_non_spike.squeeze(0).permute(0,2,3,1).detach().cpu())
 
-ds_vis = torch.stack(ds_vis_arr)
-print(f"ds_vis: {ds_vis.shape}")
-torch.save(ds_vis, Path(args.path) / "ds_vis.pt")
+ds_vis_spike = torch.stack(ds_vis_spike_arr)
+print(f"ds_vis: {ds_vis_spike.shape}")
+torch.save(ds_vis_spike, Path(args.path) / "ds_vis.pt")
+del ds_vis_spike, ds_vis_spike_arr
+
+ds_vis_non_spike = torch.stack(ds_vis_non_spike_arr)
+print(f"ds_vis_non_spike: {ds_vis_non_spike.shape}")
+torch.save(ds_vis_non_spike, Path(args.path) / "ds_vis_non_spike.pt")
 
 print("DONE")

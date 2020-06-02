@@ -88,12 +88,12 @@ test_loader = DataLoader(dataset=testingSet, batch_size = args.batch_size, shuff
 
 
 
-class MultiMLP_LSTM(nn.Module):
+class Vis_MLP_GRU(nn.Module):
 
     def __init__(self):
-        super(MultiMLP_LSTM, self).__init__()
+        super(Vis_MLP_GRU, self).__init__()
         self.input_size = 1000
-        self.hidden_dim = args.hidden_size #30
+        self.hidden_dim = args.hidden_size #32
         self.batch_size = 8
         self.num_layers = 1
 
@@ -115,9 +115,7 @@ class MultiMLP_LSTM(nn.Module):
                 
         # GRU input type: (seq_len, batch, input_size)
         out, hidden = self.gru(embeddings)
-        out = out.permute(1,0,2)
-        #print('out: ', out.shape)
-        
+        out = out.permute(1,0,2)        
         
         # Only take the output from the final timetep
         #print('out:', out.shape)
@@ -147,17 +145,11 @@ train_loss = []
 test_loss = []
 
 
-# In[75]:
-
-
-net = MultiMLP_LSTM().to(device)
+net = Vis_MLP_GRU().to(device)
 # Create snn loss instance.
 criterion = nn.CrossEntropyLoss()
 # Define optimizer module.
 optimizer = torch.optim.RMSprop(net.parameters(), lr = args.lr)
-
-
-# In[76]:
 
 
 for epoch in range(1, args.epochs+1):

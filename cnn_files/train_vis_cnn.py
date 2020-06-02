@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
+# This scripts trains vision-only modality using ANN-CNN3D
 
 import torch
 import numpy as np
@@ -41,36 +40,22 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-
-# class FLAGS():
-#     def __init__(self):
-#         self.data_dir = '/home/tasbolat/some_python_examples/data_VT_SNN/'
-#         self.batch_size = 8
-#         self.sample_file = 1
-#         self.lr = 0.00001
-#         self.epochs = 2000
-#         self.output_size = 20
-# args = FLAGS()
-
-
 device = torch.device("cuda:2")
 writer = SummaryWriter(".")
 
 
-
 train_dataset = ViTacVisDataset(
-    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=args.output_size
+    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=args.output_size, spike=False
 )
 train_loader = DataLoader(
     dataset=train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
 )
 test_dataset = ViTacVisDataset(
-    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=args.output_size
+    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=args.output_size, spike=False
 )
 test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
 )
-
 
 
 class CNN3D(nn.Module):
@@ -87,12 +72,10 @@ class CNN3D(nn.Module):
         self.conv3 = nn.Conv3d(in_channels=4, out_channels=8, kernel_size=(5,3,3), stride=(3,2,2))
 
         # Define the output layer
-        self.fc = nn.Linear(np.prod([8, 6, 6, 5]), 20)
+        self.fc = nn.Linear(np.prod([8, 6, 6, 5]), args.output_size)
         
         self.drop = nn.Dropout(0.5)
         
-        #self.fc_mlp = nn.Linear(6300, self.input_size)
-
     def forward(self, x):
         
         #print('Model input ', x.size())

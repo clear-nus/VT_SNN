@@ -429,4 +429,9 @@
         - max acc/test as max_acc_test
         - acc/test as acc_test
         - acc/train as acc_train
+    make-tactile-rectangular:
+      description: Converts tactile data into rectangular shape
+      main: cnn_files/tactile_rectangular_shape
+      flags:
+        path: /home/tasbolat/some_python_examples/data_VT_SNN_new/
         

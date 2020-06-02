@@ -11,6 +11,7 @@ import argparse
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
+from dataset import ViTacMMDataset
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -39,57 +40,18 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-
-# class FLAGS():
-#     def __init__(self):
-#         self.data_dir = '/home/tasbolat/some_python_examples/data_VT_SNN/'
-#         self.batch_size = 8
-#         self.sample_file = 1
-#         self.lr = 0.01
-#         self.epochs = 2000
-#         self.output_size = 20
-# args = FLAGS()
-
-
 device = torch.device("cuda:1")
 writer = SummaryWriter(".")
 
 
-class ViTacDataset(Dataset):
-    def __init__(self, path, sample_file, output_size):
-        self.path = path
-        sample_file = Path(path) / sample_file
-        self.samples = np.loadtxt(sample_file).astype("int")
-        self.tac_r = torch.load(Path(path) / "tactile_rectangular/tac_right.pt")
-        self.tac_l = torch.load(Path(path) / "tactile_rectangular/tac_left.pt")
-        self.vis = torch.load(Path(path) / "ds_vis.pt")
-        self.output_size = output_size
-
-    def __getitem__(self, index):
-        input_index = self.samples[index, 0]
-        class_label = self.samples[index, 1]
-        target_class = torch.zeros((self.output_size, 1, 1, 1))
-        target_class[class_label, ...] = 1
-
-        return (
-            self.tac_r[input_index],
-            self.tac_l[input_index],
-            self.vis[input_index],
-            class_label
-        )
-
-    def __len__(self):
-        return self.samples.shape[0]
-
-
-train_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=args.output_size
+train_dataset = ViTacMMDataset(
+    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=args.output_size, rectangular=True, spike=False
 )
 train_loader = DataLoader(
     dataset=train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
 )
-test_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=args.output_size
+test_dataset = ViTacMMDataset(
+    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=args.output_size, rectangular=True, spike=False
 )
 test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4

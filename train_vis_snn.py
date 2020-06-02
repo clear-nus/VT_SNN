@@ -87,7 +87,6 @@ writer = SummaryWriter(".")
 #net = EncoderVis(params, args.output_size).to(device)
 net = SlayerMLP(params, (50, 63, 2), args.hidden_size, args.output_size).to(device)
 
-
 error = snn.loss(params).to(device)
 
 if args.loss_type == 0:
@@ -95,7 +94,6 @@ if args.loss_type == 0:
 elif args.loss_type == 1:
     criteria = error.weightedNumSpikes
     
-
 optimizer = torch.optim.RMSprop(
     net.parameters(), lr=args.lr, weight_decay=0.5
 )
