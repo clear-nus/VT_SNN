@@ -73,8 +73,6 @@ class ViTacDataset(Dataset):
 # Dataset and dataLoader instances.
 split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
 
-
-#sample_file = 1
 trainingSet = ViTacDataset(datasetPath = args.data_dir, sampleFile = args.data_dir + "/train_" + split_list[args.sample_file-1] + ".txt")
 train_loader = DataLoader(dataset=trainingSet, batch_size=args.batch_size, shuffle=False, num_workers=8)
  
@@ -82,16 +80,14 @@ testingSet = ViTacDataset(datasetPath = args.data_dir, sampleFile  = args.data_d
 test_loader = DataLoader(dataset=testingSet, batch_size=args.batch_size, shuffle=False, num_workers=8)
 
 class MultiMLP_LSTM(nn.Module):
-
     def __init__(self):
         super(MultiMLP_LSTM, self).__init__()
         self.input_size = 150+78*2
-        self.hidden_dim = 40 # 30
-        self.batch_size = 8
-        self.num_layers = 1
+        self.hidden_dim = args.hidden_size
+        self.batch_size = args.batch_size
 
         # Define the LSTM layer
-        self.gru = nn.GRU(self.input_size, self.hidden_dim, self.num_layers)
+        self.gru = nn.GRU(self.input_size, self.hidden_dim, 1)
 
         # Define the output layer
         self.fc = nn.Linear(self.hidden_dim, args.output_size)
@@ -101,33 +97,18 @@ class MultiMLP_LSTM(nn.Module):
 
 
     def forward(self, in_tact, in_vis):
-
         in_vis = in_vis.reshape([in_vis.shape[0],  in_vis.shape[-1], 50*63*2])
-        #print('in vis:', in_vis.shape)
         viz_embeddings = self.fc_vis(in_vis).permute(1,0,2)
-        #print('viz embeddings:', viz_embeddings.shape)
         in_tact = in_tact.permute(2,0,1)
-        #print('tact embeddings:', in_tact.shape)
-        
         embeddings = torch.cat([viz_embeddings, in_tact], dim=2)
-        #print('embeddings:', embeddings.shape)        
-        # GRU input type: (seq_len, batch, input_size)
         out, hidden = self.gru(embeddings)
         out = out.permute(1,0,2)
-        #print('out: ', out.shape)
-        
-        # Only take the output from the final timetep
-        #print('out:', out.shape)
         y_pred = self.fc(out[:, -1, :])
         
         return y_pred
 
-
-# In[74]:
-
-device = torch.device("cuda:2")
+device = torch.device("cuda")
 writer = SummaryWriter(".")
-
 
 def _save_model(epoch, loss):
     log.info(f"Writing model at epoch {epoch}...")
@@ -136,18 +117,11 @@ def _save_model(epoch, loss):
     )
     torch.save(net.state_dict(), checkpoint_path)
 
-
 net = MultiMLP_LSTM().to(device)
-# Create snn loss instance.
 criterion = nn.CrossEntropyLoss()
-# Define optimizer module.
 optimizer = torch.optim.RMSprop(net.parameters(), lr = args.lr)
 
-
-# In[76]:
-
 for epoch in range(1, args.epochs+1):
-    # Training loop.
     net.train()
     correct = 0
     batch_loss = 0
@@ -156,21 +130,13 @@ for epoch in range(1, args.epochs+1):
 
         in_vis = in_vis.to(device)
         in_tac = in_tac.to(device)
-        #in_vis = in_vis.squeeze().permute(0,1,4,2,3)
-        #print(in_vis.shape)
         label = label.to(device)
-        # Forward pass of the network.
         out_tact = net.forward(in_tac, in_vis)
-        # Calculate loss.
         loss = criterion(out_tact, label)
-        #print(loss)
 
         batch_loss += loss.cpu().data.item()
-        # Reset gradients to zero.
         optimizer.zero_grad()
-        # Backward pass of the network.
         loss.backward()
-        # Update weights.
         optimizer.step()
 
         _, predicted = torch.max(out_tact.data, 1)
