@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-
 from datetime import datetime
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
@@ -15,18 +11,7 @@ import logging
 import argparse
 from torch.utils.tensorboard import SummaryWriter
 
-
-# class FLAGS():
-#     def __init__(self):
-#         self.data_dir = '/home/tasbolat/some_python_examples/data_VT_SNN/'
-#         self.batch_size = 8
-#         self.sample_file = 1
-#         self.lr = 0.0001
-#         self.epochs = 400
-# args = FLAGS()
-
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-
 log = logging.getLogger()
 
 
@@ -36,7 +21,6 @@ parser.add_argument("--data_dir", type=str, help="Path to data.", required=True)
 parser.add_argument(
     "--checkpoint_dir", type=str, help="Path for saving checkpoints.", required=True
 )
-
 parser.add_argument("--lr", type=float, help="Learning rate.", required=True)
 parser.add_argument(
     "--sample_file", type=int, help="Sample number to train from.", required=True
@@ -68,18 +52,9 @@ class ViTacDataset(Dataset):
     def __len__(self):
         return self.samples.shape[0]
 
-
-# In[4]:
-
-
 # Dataset and dataLoader instances.
 split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
 
-
-#data_dir = '/home/tasbolat/some_python_examples/data_VT_SNN/'
-
-
-#sample_file = 1
 trainingSet = ViTacDataset(datasetPath = args.data_dir, sampleFile = args.data_dir + "/train_" + split_list[args.sample_file-1] + ".txt")
 train_loader = DataLoader(dataset=trainingSet, batch_size = args.batch_size, shuffle=False, num_workers=8)
  
@@ -87,18 +62,15 @@ testingSet = ViTacDataset(datasetPath = args.data_dir, sampleFile  = args.data_d
 test_loader = DataLoader(dataset=testingSet, batch_size = args.batch_size, shuffle=False, num_workers=8)
 
 
-
 class Vis_MLP_GRU(nn.Module):
-
     def __init__(self):
         super(Vis_MLP_GRU, self).__init__()
         self.input_size = 1000
-        self.hidden_dim = args.hidden_size #32
-        self.batch_size = 8
-        self.num_layers = 1
+        self.hidden_dim = args.hidden_size
+        self.batch_size = args.batch_size
 
         # Define the LSTM layer
-        self.gru = nn.GRU(self.input_size, self.hidden_dim, self.num_layers)
+        self.gru = nn.GRU(self.input_size, self.hidden_dim, 1)
 
         # Define the output layer
         self.fc = nn.Linear(self.hidden_dim, args.output_size)
@@ -109,26 +81,16 @@ class Vis_MLP_GRU(nn.Module):
 
     def forward(self, in_vis):
         in_vis = in_vis.reshape([in_vis.shape[0], in_vis.shape[-1], 50*63*2])
-        #print('in vis:', in_vis.shape)
         embeddings = self.fc_vis(in_vis).permute(1,0,2)
-        #print('embeddings:', embeddings.shape)
-                
-        # GRU input type: (seq_len, batch, input_size)
         out, hidden = self.gru(embeddings)
         out = out.permute(1,0,2)        
         
-        # Only take the output from the final timetep
-        #print('out:', out.shape)
         y_pred = self.fc(out[:, -1, :])
         
         return y_pred
 
-
-# In[74]:
-
-device = torch.device("cuda:2")
+device = torch.device("cuda")
 writer = SummaryWriter(".")
-
 
 def _save_model(epoch, loss):
     log.info(f"Writing model at epoch {epoch}...")
@@ -136,8 +98,6 @@ def _save_model(epoch, loss):
         Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{loss:0.3f}.pt"
     )
     torch.save(net.state_dict(), checkpoint_path)
-
-
 
 train_accs = []
 test_accs = []
