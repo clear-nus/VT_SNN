@@ -15,7 +15,7 @@ class ViTacDataset(Dataset):
         self.output_size = output_size
         sample_file = Path(path) / sample_file
         self.samples = np.loadtxt(sample_file).astype("int")
-        
+
         self.rectangular = rectangular
         if rectangular:
             self.right_tact = torch.load(Path(path) / "tac_right.pt")
@@ -29,7 +29,7 @@ class ViTacDataset(Dataset):
         class_label = self.samples[index, 1]
         target_class = torch.zeros((self.output_size, 1, 1, 1))
         target_class[class_label, ...] = 1
-    
+
         if self.rectangular:
             return (
                 self.right_tact[input_index],
@@ -55,12 +55,13 @@ class ViTacVisDataset(Dataset):
         sample_file = Path(path) / sample_file
         self.samples = np.loadtxt(sample_file).astype("int")
         self.output_size = output_size
-        
-        self.spike=spike
+
+        self.spike = spike
         if spike:
             self.vis = torch.load(Path(path) / "ds_vis.pt")
         else:
             self.vis = torch.load(Path(path) / "ds_vis_non_spike.pt")
+
     def __getitem__(self, index):
         input_index = self.samples[index, 0]
         class_label = self.samples[index, 1]
@@ -72,21 +73,23 @@ class ViTacVisDataset(Dataset):
             target_class,
             class_label,
         )
+
     def __len__(self):
         return self.samples.shape[0]
+
 
 class ViTacMMDataset(Dataset):
     def __init__(self, path, sample_file, output_size, spike=True, rectangular=False):
         self.path = path
         self.samples = np.loadtxt(Path(path) / sample_file).astype("int")
         self.output_size = output_size
-        
-        self.spike=spike
+
+        self.spike = spike
         if spike:
             self.ds_vis = torch.load(Path(path) / "ds_vis.pt")
         else:
             self.ds_vis = torch.load(Path(path) / "ds_vis_non_spike.pt")
-            
+
         self.rectangular = rectangular
         if rectangular:
             self.right_tact = torch.load(Path(path) / "tac_right.pt")

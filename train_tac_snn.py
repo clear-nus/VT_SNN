@@ -32,38 +32,30 @@ parser.add_argument(
 parser.add_argument(
     "--hidden_size", type=int, help="Size of hidden layer.", required=True
 )
-parser.add_argument(
-    "--theta", type=float, help="SRM threshold.", required=True
-)
+parser.add_argument("--theta", type=float, help="SRM threshold.", required=True)
 
-parser.add_argument(
-    "--tauRho", type=float, help="spike pdf parameter.", required=True
-)
+parser.add_argument("--tauRho", type=float, help="spike pdf parameter.", required=True)
 
-parser.add_argument(
-    "--batch_size", type=int, help="Batch Size.", required=True
-)
+parser.add_argument("--batch_size", type=int, help="Batch Size.", required=True)
 
-parser.add_argument(
-    "--output_size", type=int, help="Number of classes", default=20
-)
+parser.add_argument("--output_size", type=int, help="Number of classes", default=20)
 parser.add_argument(
     "--loss_type", type=int, help="0:numSpikes or 1:weightedNumSpikes", required=True
 )
 args = parser.parse_args()
 
-LOSS_TYPES = ['NumSpikes', 'WeightedNumSpikes']
+LOSS_TYPES = ["NumSpikes", "WeightedNumSpikes"]
 
 
 params = {
     "neuron": {
         "type": "SRMALPHA",
-        "theta": args.theta, # activation threshold
-        "tauSr": 10.0, # time constant for srm kernel
-        "tauRef": 1.0, # refractory kernel time constant
-        "scaleRef": 2, # refractory kernel constant relative to theta
-        "tauRho": args.tauRho, # pdf
-        "scaleRho": 1, # membrane potential 
+        "theta": args.theta,  # activation threshold
+        "tauSr": 10.0,  # time constant for srm kernel
+        "tauRef": 1.0,  # refractory kernel time constant
+        "scaleRef": 2,  # refractory kernel constant relative to theta
+        "tauRho": args.tauRho,  # pdf
+        "scaleRho": 1,  # membrane potential
     },
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
     "training": {
@@ -79,9 +71,9 @@ params = {
 }
 
 input_size = 156  # Tact
-output_size = args.output_size # 20
+output_size = args.output_size  # 20
 
-device = torch.device("cuda:0")
+device = torch.device("cuda")
 writer = SummaryWriter(".")
 net = SlayerMLP(params, input_size, args.hidden_size, output_size).to(device)
 
@@ -91,23 +83,26 @@ if args.loss_type == 0:
     criteria = error.numSpikes
 elif args.loss_type == 1:
     criteria = error.weightedNumSpikes
-    
-optimizer = torch.optim.RMSprop(
-    net.parameters(), lr=args.lr, weight_decay=0.5
-)
+
+optimizer = torch.optim.RMSprop(net.parameters(), lr=args.lr, weight_decay=0.5)
 
 train_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=output_size
+    path=args.data_dir,
+    sample_file=f"train_80_20_{args.sample_file}.txt",
+    output_size=output_size,
 )
 train_loader = DataLoader(
     dataset=train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
 )
 test_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=output_size
+    path=args.data_dir,
+    sample_file=f"test_80_20_{args.sample_file}.txt",
+    output_size=output_size,
 )
 test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
 )
+
 
 def _train():
     correct = 0
@@ -121,10 +116,10 @@ def _train():
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
 
-        #spike_loss = error.weightedNumSpikes(output, target) # numSpikes
-        
-        spike_loss = criteria(output, target) # numSpikes
-        
+        # spike_loss = error.weightedNumSpikes(output, target) # numSpikes
+
+        spike_loss = criteria(output, target)  # numSpikes
+
         loss = spike_loss
 
         optimizer.zero_grad()
@@ -135,6 +130,7 @@ def _train():
     writer.add_scalar("acc/train", correct / num_samples, epoch)
 
     return spike_loss
+
 
 def _test():
     correct = 0
@@ -149,8 +145,8 @@ def _test():
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            #spike_loss = error.weightedNumSpikes(output, target) # numSpikes
-            spike_loss = criteria(output, target) # numSpikes
+            # spike_loss = error.weightedNumSpikes(output, target) # numSpikes
+            spike_loss = criteria(output, target)  # numSpikes
             loss = spike_loss
 
         writer.add_scalar("loss/test", spike_loss / len(test_loader), epoch)
@@ -162,9 +158,10 @@ def _test():
 def _save_model(epoch):
     log.info(f"Writing model at epoch {epoch}...")
     checkpoint_path = (
-            Path(args.checkpoint_dir) / f"tac_weights_{epoch:03d}_{args.sample_file:02d}.pt"
+        Path(args.checkpoint_dir) / f"tac_weights_{epoch:03d}_{args.sample_file:02d}.pt"
     )
     torch.save(net.state_dict(), checkpoint_path)
+
 
 for epoch in range(1, args.epochs + 1):
     _train()

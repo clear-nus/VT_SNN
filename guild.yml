@@ -245,6 +245,7 @@
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
         sample_file: 1
         hidden_size: 32
+        output_size: 20
         checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
       compare:
         - =batch_size
@@ -279,6 +280,7 @@
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
         sample_file: 1
         hidden_size: 32
+        output_size: 20
         checkpoint_dir: .
       compare:
         - =batch_size

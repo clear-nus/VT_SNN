@@ -10,6 +10,7 @@ in pkgs.mkShell rec {
     # the environment.
     # cudatoolkit
     pythonPackages.python
+    pythonPackages.black
 
     # This execute some shell code to initialize a venv in $venvDir before
     # dropping into the shell

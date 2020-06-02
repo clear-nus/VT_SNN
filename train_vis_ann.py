@@ -10,6 +10,7 @@ from pathlib import Path
 import logging
 import argparse
 from torch.utils.tensorboard import SummaryWriter
+from dataset import ViTacVisDataset
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger()
@@ -28,38 +29,30 @@ parser.add_argument(
 parser.add_argument(
     "--hidden_size", type=int, help="Size of hidden layer.", required=True
 )
-parser.add_argument(
-    "--batch_size", type=int, help="Batch Size.", required=True
-)
-parser.add_argument(
-    "--output_size", type=int, help="Number of classes.", default=20
-)
+parser.add_argument("--batch_size", type=int, help="Batch Size.", required=True)
+parser.add_argument("--output_size", type=int, help="Number of classes.", required=True)
 
 args = parser.parse_args()
 
-# Dataset definition
-class ViTacDataset(Dataset):
-    def __init__(self, datasetPath, sampleFile):
-        self.path = datasetPath 
-        self.samples = np.loadtxt(sampleFile).astype('int')
-        self.vis = torch.load(Path(self.path) / "ds_vis.pt")
+train_dataset = ViTacVisDataset(
+    path=args.data_dir,
+    sample_file=f"train_80_20_{args.sample_file}.txt",
+    output_size=args.output_size,
+    spike=False,
+)
+train_loader = DataLoader(
+    dataset=train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8
+)
 
-    def __getitem__(self, index):
-        inputIndex  = self.samples[index, 0]
-        classLabel  = self.samples[index, 1]
-        return self.vis[inputIndex], classLabel
-
-    def __len__(self):
-        return self.samples.shape[0]
-
-# Dataset and dataLoader instances.
-split_list = ['80_20_1','80_20_2','80_20_3','80_20_4','80_20_5']
-
-trainingSet = ViTacDataset(datasetPath = args.data_dir, sampleFile = args.data_dir + "/train_" + split_list[args.sample_file-1] + ".txt")
-train_loader = DataLoader(dataset=trainingSet, batch_size = args.batch_size, shuffle=False, num_workers=8)
- 
-testingSet = ViTacDataset(datasetPath = args.data_dir, sampleFile  = args.data_dir + "/test_" + split_list[args.sample_file-1] + ".txt")
-test_loader = DataLoader(dataset=testingSet, batch_size = args.batch_size, shuffle=False, num_workers=8)
+test_dataset = ViTacVisDataset(
+    path=args.data_dir,
+    sample_file=f"test_80_20_{args.sample_file}.txt",
+    output_size=args.output_size,
+    spike=False,
+)
+test_loader = DataLoader(
+    dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8
+)
 
 
 class Vis_MLP_GRU(nn.Module):
@@ -74,100 +67,82 @@ class Vis_MLP_GRU(nn.Module):
 
         # Define the output layer
         self.fc = nn.Linear(self.hidden_dim, args.output_size)
-        
-        #self.pool_vis = nn.AvgPool3d((1,5,5), padding=0, stride=(1,7,7))
-        self.fc_vis = nn.Linear(63*50*2, self.input_size)
 
+        # self.pool_vis = nn.AvgPool3d((1,5,5), padding=0, stride=(1,7,7))
+        self.fc_vis = nn.Linear(63 * 50 * 2, self.input_size)
 
     def forward(self, in_vis):
-        in_vis = in_vis.reshape([in_vis.shape[0], in_vis.shape[-1], 50*63*2])
-        embeddings = self.fc_vis(in_vis).permute(1,0,2)
+        in_vis = in_vis.reshape([in_vis.shape[0], in_vis.shape[-1], 50 * 63 * 2])
+        embeddings = self.fc_vis(in_vis).permute(1, 0, 2)
         out, hidden = self.gru(embeddings)
-        out = out.permute(1,0,2)        
-        
+        out = out.permute(1, 0, 2)
+
         y_pred = self.fc(out[:, -1, :])
-        
+
         return y_pred
+
 
 device = torch.device("cuda")
 writer = SummaryWriter(".")
 
-def _save_model(epoch, loss):
+net = Vis_MLP_GRU().to(device)
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.RMSprop(net.parameters(), lr=args.lr)
+
+
+def _save_model(epoch):
     log.info(f"Writing model at epoch {epoch}...")
-    checkpoint_path = (
-        Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{loss:0.3f}.pt"
-    )
+    checkpoint_path = Path(args.checkpoint_dir) / f"weights-{epoch:03d}.pt"
     torch.save(net.state_dict(), checkpoint_path)
 
-train_accs = []
-test_accs = []
-train_loss = []
-test_loss = []
 
-
-net = Vis_MLP_GRU().to(device)
-# Create snn loss instance.
-criterion = nn.CrossEntropyLoss()
-# Define optimizer module.
-optimizer = torch.optim.RMSprop(net.parameters(), lr = args.lr)
-
-
-for epoch in range(1, args.epochs+1):
-    # Training loop.
+def _train(epoch):
     net.train()
     correct = 0
     batch_loss = 0
     train_acc = 0
-    for i, (in_vis, label) in enumerate(train_loader, 0):
-
+    for i, (in_vis, _, label) in enumerate(train_loader):
         in_vis = in_vis.to(device)
-        #in_vis = in_vis.squeeze().permute(0,1,4,2,3)
-        #print(in_vis.shape)
         label = label.to(device)
-        # Forward pass of the network.
         out_tact = net.forward(in_vis)
-        # Calculate loss.
         loss = criterion(out_tact, label)
-        #print(loss)
 
         batch_loss += loss.cpu().data.item()
-        # Reset gradients to zero.
         optimizer.zero_grad()
-        # Backward pass of the network.
         loss.backward()
-        # Update weights.
         optimizer.step()
 
         _, predicted = torch.max(out_tact.data, 1)
         correct += (predicted == label).sum().item()
 
-    # Reset training stats.
-    train_acc = correct/len(train_loader.dataset)
-    writer.add_scalar("loss/train", batch_loss/len(train_loader.dataset), epoch)
+    train_acc = correct / len(train_loader.dataset)
+    writer.add_scalar("loss/train", batch_loss / len(train_loader.dataset), epoch)
     writer.add_scalar("acc/train", train_acc, epoch)
 
-    # testing
+
+def _test(epoch):
     net.eval()
     correct = 0
     batch_loss = 0
     test_acc = 0
     with torch.no_grad():
-        for i, (in_vis, label) in enumerate(test_loader, 0):
+        for i, (in_vis, _, label) in enumerate(test_loader, 0):
             in_vis = in_vis.to(device)
-            #in_vis = in_vis.squeeze().permute(0,1,4,2,3)
-
-            # Forward pass of the network.
             out_tact = net.forward(in_vis)
             label = label.to(device)
             _, predicted = torch.max(out_tact.data, 1)
             correct += (predicted == label).sum().item()
-            # Calculate loss.
             loss = criterion(out_tact, label)
             batch_loss += loss.cpu().data.item()
 
-    test_acc = correct/len(test_loader.dataset)
-    writer.add_scalar("loss/test", batch_loss/len(test_loader.dataset), epoch)
+    test_acc = correct / len(test_loader.dataset)
+    writer.add_scalar("loss/test", batch_loss / len(test_loader.dataset), epoch)
     writer.add_scalar("acc/test", test_acc, epoch)
 
-    if epoch%100 == 0:
-        _save_model(epoch, batch_loss/len(test_loader.dataset))
+
+for epoch in range(1, args.epochs + 1):
+    _train(epoch)
+    if epoch % 50 == 0:
+        _test(epoch)
+    if epoch % 100 == 0:
+        _save_model(epoch)
