@@ -104,15 +104,15 @@ def _train(epoch):
     for i, (in_vis, _, label) in enumerate(train_loader):
         in_vis = in_vis.to(device)
         label = label.to(device)
-        out_tact = net.forward(in_vis)
-        loss = criterion(out_tact, label)
+        out_vis = net.forward(in_vis)
+        loss = criterion(out_vis, label)
 
         batch_loss += loss.cpu().data.item()
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        _, predicted = torch.max(out_tact.data, 1)
+        _, predicted = torch.max(out_vis.data, 1)
         correct += (predicted == label).sum().item()
 
     train_acc = correct / len(train_loader.dataset)
@@ -128,11 +128,11 @@ def _test(epoch):
     with torch.no_grad():
         for i, (in_vis, _, label) in enumerate(test_loader, 0):
             in_vis = in_vis.to(device)
-            out_tact = net.forward(in_vis)
+            out_vis = net.forward(in_vis)
             label = label.to(device)
-            _, predicted = torch.max(out_tact.data, 1)
+            _, predicted = torch.max(out_vis.data, 1)
             correct += (predicted == label).sum().item()
-            loss = criterion(out_tact, label)
+            loss = criterion(out_vis, label)
             batch_loss += loss.cpu().data.item()
 
     test_acc = correct / len(test_loader.dataset)
