@@ -36,9 +36,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-device = torch.device("cuda:2")
+ device = torch.device("cuda")
 writer = SummaryWriter(".")
-
 
 class ViTacDataset(Dataset):
     def __init__(self, path, sample_file, output_size):
@@ -65,7 +64,6 @@ class ViTacDataset(Dataset):
     def __len__(self):
         return self.samples.shape[0]
 
-
 train_dataset = ViTacDataset(
     path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=args.output_size
 )
@@ -79,49 +77,32 @@ test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
 )
 
-
-
 class CNN3D(nn.Module):
-
-    def __init__(self):
-        
+    def __init__(self):    
         super(CNN3D, self).__init__()
         
         self.conv1 = nn.Conv3d(in_channels=2, out_channels=4, kernel_size=(7,3,3), stride=(4,1,1))
         self.conv2 = nn.Conv3d(in_channels=4, out_channels=8, kernel_size=(5,3,3), stride=(3,1,1))
         
     def forward(self, x):
-        
-        #print('Model input ', x.size())
         batch_size, C, H, W, sequence_size = x.size()
         x = x.view([batch_size, C, sequence_size, H, W])
-        #print('Model input ', x.size())
         
-        # pass to cnn3d
         out = self.conv1(x)
         out = F.relu(out)
-        #print('conv1 out: ', out.shape)
         out = self.conv2(out)
         out = F.relu(out)
-        #print('conv2 out: ', out.shape)
         out = out.view([batch_size, np.prod([8, 26, 5, 3])])
-        #print(out.shape)
         
         return out
 
-
-
 class MyNet(nn.Module):
-
-    def __init__(self):
-        
+    def __init__(self):      
         super(MyNet, self).__init__()
         
         self.cnn_left = CNN3D()
         self.cnn_right = CNN3D()
 
-        # 8, 35, 5, 3
-        # Define the output layer
         self.fc = nn.Linear(np.prod([8, 26, 5, 3])*2, 20)
         
         self.drop = nn.Dropout(0.5)

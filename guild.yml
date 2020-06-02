@@ -382,6 +382,7 @@
         lr: 0.00001
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
         sample_file: 1
+        hidden_size: 32
         output_size: 20
         checkpoint_dir: . 
       compare:

@@ -1,20 +1,13 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import torch
 import numpy as np
 from pathlib import Path
 import logging
 from torch.utils.data import DataLoader
-from dataset import ViTacVisDataset
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 from torch import nn
 import torch.nn.functional as F
-
+from torch.utils.data import Dataset
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
@@ -29,6 +22,7 @@ parser.add_argument(
 )
 
 parser.add_argument("--lr", type=float, help="Learning rate.", required=True)
+parser.add_argument("--hidden_size", type=float, help="Hidden size.", required=True)
 parser.add_argument(
     "--sample_file", type=int, help="Sample number to train from.", required=True
 )
@@ -36,27 +30,32 @@ parser.add_argument(
     "--batch_size", type=int, help="Batch Size.", required=True
 )
 parser.add_argument(
-    "--output_size", type=int, help="Batch Size.", required=True
+    "--output_size", type=int, help="Output Size.", required=True
 )
 
 args = parser.parse_args()
 
-
-# class FLAGS():
-#     def __init__(self):
-#         self.data_dir = '/home/tasbolat/some_python_examples/data_VT_SNN/'
-#         self.batch_size = 8
-#         self.sample_file = 1
-#         self.lr = 0.00001
-#         self.epochs = 2000
-#         self.output_size = 20
-# args = FLAGS()
-
-
-device = torch.device("cuda:2")
+device = torch.device("cuda")
 writer = SummaryWriter(".")
 
+class ViTacVisDataset(Dataset):
+    def __init__(self, path, sample_file, output_size):
+        self.path = path
+        self.output_size = output_size
+        self.samples = np.loadtxt(Path(self.path) / sample_file).astype('int')
 
+    def __getitem__(self, index):
+        inputIndex  = self.samples[index, 0]
+        classLabel  = self.samples[index, 1]
+        desiredClass = torch.zeros((self.output_size, 1, 1, 1))
+        desiredClass[classLabel,...] = 1
+
+        inputSpikes_vis = np.load(self.path + str(inputIndex.item()) + '_vis.npy')
+        inputSpikes_vis = torch.FloatTensor(inputSpikes_vis)
+        return inputSpikes_vis, desiredClass, classLabel
+
+    def __len__(self):
+        return self.samples.shape[0]
 
 train_dataset = ViTacVisDataset(
     path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=args.output_size
@@ -71,46 +70,36 @@ test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
 )
 
-
-
 class CNN3D(nn.Module):
-
-    def __init__(self):
-        
+    def __init__(self):       
         super(CNN3D, self).__init__()
         self.input_size = 8*5*3
-        self.hidden_dim = 32
-        self.num_layers = 1
-        
+        self.hidden_dim = args.hidden_size
+
+        self.avg_pool = nn.AvgPool3d(3, stride=2)
         self.conv1 = nn.Conv3d(in_channels=2, out_channels=2, kernel_size=(10,5,5), stride=(5,2,2))
         self.conv2 = nn.Conv3d(in_channels=2, out_channels=4, kernel_size=(5,3,3), stride=(3,2,2))
         self.conv3 = nn.Conv3d(in_channels=4, out_channels=8, kernel_size=(5,3,3), stride=(3,2,2))
 
         # Define the output layer
-        self.fc = nn.Linear(np.prod([8, 6, 6, 5]), 20)
+        self.fc = nn.Linear(np.prod([8, 6, 30, 23]), args.output_size)
         
         self.drop = nn.Dropout(0.5)
-        
-        #self.fc_mlp = nn.Linear(6300, self.input_size)
 
     def forward(self, x):
-        
-        #print('Model input ', x.size())
         batch_size, C, H, W, sequence_size = x.size()
         x = x.view([batch_size, C, sequence_size, H, W])
-        #print('Model input ', x.size())
         
         # pass to cnn3d
+        out = self.avg_pool(x)
+        out = F.relu(out)
         out = self.conv1(x)
         out = F.relu(out)
-        #print('conv1 out: ', out.shape)
         out = self.conv2(out)
         out = F.relu(out)
-        #print('conv2 out: ', out.shape)
         out = self.conv3(out)
         out = F.relu(out)
-        #print('conv3 out: ', out.shape)
-        out = out.view([batch_size, np.prod([8, 6, 6, 5])])
+        out = out.view([batch_size, np.prod([8, 6, 30, 23])])
         out = self.fc(out)
         # use dropout to have better generalization
         out = self.drop(out)
@@ -129,8 +118,6 @@ net = CNN3D().to(device)
 criterion = nn.CrossEntropyLoss()
 # Define optimizer module.
 optimizer = torch.optim.RMSprop(net.parameters(), lr=args.lr)
-
-
 
 for epoch in range(1, args.epochs+1):
     # Training loop.
