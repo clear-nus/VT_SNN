@@ -418,32 +418,25 @@
         - acc/train as acc_train
     benchmark:
       description: Run benchmarks on trained model
-      main: run_benchmark
+      main: benchmark
+      requires:
+        - operation: loihi-tact
       flags:
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
         bsize: 1
-        time: 900
         log: gpu.json
         output_size: 2
-        hidden_size: 1024
+        hidden_size: 32
         sample_file: 1
-        network_config: /home/jethro/network_config/slip.yml
-        saved_weights: /home/jethro/.pyenv/versions/miniconda3-4.3.30/.guild/runs/3d77e9ed1e4c4a8a9d3f67582d3aa391/weights-600-2.360.pt
+        network_config: /home/jethro/slip.yml
+        num_inf: 100000
+        gpu: 0
     loihi-tact:
       description: Train tactile model
       main: train_tac_loihi_snn
       output-scalars: no
       objective:
         maximize: acc/test
-      flags-import:
-        - batch_size
-        - epochs
-        - lr
-        - network
-        - sample_file
-        - hidden_size
-        - output_size
-        - checkpoint_dir
       flags:
         batch_size: 8
         epochs: 500
@@ -452,6 +445,7 @@
         network: /home/jethro/slip.yml
         sample_file: 1
         hidden_size: 32
+        output_size: 2
         checkpoint_dir: .
       compare:
         - =batch_size
@@ -477,22 +471,21 @@
       description: Test tactile Loihi model
       main: test_loihi_snn
       output-scalars: no
+      requires:
+        - operation: loihi-tact
       flags-import:
         - batch_size
         - network
         - sample_file
         - hidden_size
         - output_size
-        - saved_weights
       flags:
         batch_size: 8
         epochs: 500
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
         network: /home/jethro/slip.yml
         sample_file: 1
-        hidden_size: 128
-        saved_weights: /home/jethro/
-        # saved_weights: /home/jethro/.pyenv/versions/miniconda3-4.3.30/.guild/runs/531192ed28934262a4db385ffe9d6d18/weights-1000-6.810.pt
+        hidden_size: 32
     quantize:
       description: Quantize model parameters
       main: quantize_params

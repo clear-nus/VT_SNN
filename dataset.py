@@ -23,7 +23,7 @@ class ViTacDataset(Dataset):
         class_label = self.samples[index, 1]
         target_class = torch.zeros((self.output_size, 1, 1, 1))
         target_class[class_label, ...] = 1
-    
+
         return (
             self.tact[input_index],
             torch.tensor(0),
@@ -57,6 +57,7 @@ class ViTacVisDataset(Dataset):
 
     def __len__(self):
         return self.samples.shape[0]
+
 
 class ViTacMMDataset(Dataset):
     def __init__(self, path, sample_file, output_size):

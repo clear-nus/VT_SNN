@@ -29,41 +29,45 @@ parser.add_argument(
     "--hidden_size", type=int, help="Size of hidden layer.", required=True
 )
 parser.add_argument(
-    "--batch_size", type=int, help="Batch Size.", required=True
+    "--output_size", type=int, help="Number of output classes.", required=True
 )
+parser.add_argument("--batch_size", type=int, help="Batch Size.", required=True)
 
 args = parser.parse_args()
 params = snn.params(args.network)
 input_size = 156  # Tact
-output_size = 2
 
 device = torch.device("cuda")
 writer = SummaryWriter(".")
-net = SlayerLoihiMLP(params, input_size, args.hidden_size, output_size).to(device)
+net = SlayerLoihiMLP(params, input_size, args.hidden_size, args.output_size).to(device)
 
 error = snn.loss(params, spikeLayer).to(device)
-optimizer = torch.optim.RMSprop(
-    net.parameters(), lr=args.lr, weight_decay=0
-)
+optimizer = torch.optim.RMSprop(net.parameters(), lr=args.lr, weight_decay=0)
 
 train_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=output_size
+    path=args.data_dir,
+    sample_file=f"train_80_20_{args.sample_file}.txt",
+    output_size=args.output_size,
 )
 train_loader = DataLoader(
     dataset=train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
 )
 test_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=output_size
+    path=args.data_dir,
+    sample_file=f"test_80_20_{args.sample_file}.txt",
+    output_size=args.output_size,
 )
 test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
 )
+
 
 def l1_reg(spike_trains):
     loss = torch.tensor(0.0).to(device)
     for st in spike_trains:
         loss += torch.mean(st)
     return loss
+
 
 def l2_reg(spike_trains):
     loss = torch.tensor(0.0).to(device)
@@ -75,8 +79,10 @@ def l2_reg(spike_trains):
         loss += l2_per_neuron_spike_loss
     return loss
 
+
 class Losses:
     SPIKE, L1, L2 = range(3)
+
 
 def _train():
     correct = 0
@@ -111,6 +117,7 @@ def _train():
 
     return spike_loss
 
+
 def _test():
     correct = 0
     num_samples = 0
@@ -141,30 +148,38 @@ def _test():
 
     return spike_loss
 
-def _save_model(epoch, loss):
-    log.info(f"Writing model at epoch {epoch}...")
-    checkpoint_path = (
-        Path(args.checkpoint_dir) / f"weights-{epoch:03d}-{loss:0.3f}.pt"
-    )
-    fc1_weights = net.fc1.weight.flatten().cpu().data.numpy().reshape(args.hidden_size, -1)
-    fc2_weights = net.fc2.weight.flatten().cpu().data.numpy().reshape(output_size, -1)
 
-    np.save(Path(args.checkpoint_dir) / f"{epoch:03d}-fc1.npy", fc1_weights)
-    np.save(Path(args.checkpoint_dir) / f"{epoch:03d}-fc2.npy", fc2_weights)
+def _save_model(epoch):
+    log.info(f"Writing model at epoch {epoch}...")
+    checkpoint_path = Path(args.checkpoint_dir) / f"weights-{epoch:03d}.pt"
     torch.save(net.state_dict(), checkpoint_path)
 
-def _quantize_params(epoch):
-    log.info(f"Quantizing model at epoch{epoch}...")
-    fc1_weights = snn.utils.quantize(net.fc1.weight, 2).flatten().cpu().data.numpy()
-    fc2_weights = snn.utils.quantize(net.fc2.weight, 2).flatten().cpu().data.numpy()
 
-    np.save(Path(args.checkpoint_dir) / f"quantized-{epoch:03d}-fc1.npy", fc1_weights)
-    np.save(Path(args.checkpoint_dir) / f"quantized-{epoch:03d}-fc2.npy", fc2_weights)
+def _quantize_params(epoch):
+    log.info(f"Quantizing model at epoch {epoch}...")
+    fc1_weights = (
+        snn.utils.quantize(net.fc1.weight, 2)
+        .flatten()
+        .cpu()
+        .data.numpy()
+        .reshape(args.hidden_size, -1)
+    )
+    fc2_weights = (
+        snn.utils.quantize(net.fc2.weight, 2)
+        .flatten()
+        .cpu()
+        .data.numpy()
+        .reshape(args.output_size, -1)
+    )
+
+    np.save(Path(args.checkpoint_dir) / f"loihi-{epoch:03d}-fc1.npy", fc1_weights)
+    np.save(Path(args.checkpoint_dir) / f"loihi-{epoch:03d}-fc2.npy", fc2_weights)
+
 
 for epoch in range(1, args.epochs + 1):
     _train()
     if epoch % 10 == 0:
         test_loss = _test()
     if epoch % 100 == 0:
-        _save_model(epoch, test_loss)
+        _save_model(epoch)
         _quantize_params(epoch)
