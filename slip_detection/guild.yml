@@ -207,3 +207,117 @@
         - acc/test as acc_test
         - acc/train as acc_train
         - max acc/test as max_acc_test
+    tact-ann:
+      description: Train tactile model using ANN (MLP-GRU)
+      main: /home/tasbolat/some_python_examples/VT_SNN/train_tac_ann
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - lr
+        - sample_file
+        - hidden_size
+        - output_size
+        - checkpoint_dir
+      flags:
+        batch_size: 8
+        epochs: 600
+        lr: 0.0001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data/
+        sample_file: 1
+        hidden_size: 32
+        output_size: 2
+        checkpoint_dir: .
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =output_size
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+    vis-ann:
+      description: Train vision model using ANN (MLP-GRU)
+      main: /home/tasbolat/some_python_examples/VT_SNN/train_vis_ann
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - lr
+        - sample_file
+        - hidden_size
+        - output_size
+        - checkpoint_dir
+        - output_size
+      flags:
+        batch_size: 8
+        epochs: 400
+        lr: 0.0001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data/
+        sample_file: 1
+        hidden_size: 32
+        checkpoint_dir: .
+        output_size: 2
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =output_size
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+    mm-ann:
+      description: Train multimodal model using ANN (MLP-GRU)
+      main: /home/tasbolat/some_python_examples/VT_SNN/train_mm_ann
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - lr
+        - sample_file
+        - hidden_size
+        - output_size
+        - checkpoint_dir
+      flags:
+        batch_size: 8
+        epochs: 400
+        lr: 0.0001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data/
+        sample_file: 1
+        hidden_size: 32
+        output_size: 2
+        checkpoint_dir: . 
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =output_size
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+    make-tactile-rectangular:
+      description: Converts tactile data into rectangular shape for slip
+      main: /home/tasbolat/some_python_examples/VT_SNN/cnn_files/tactile_rectangular_shape
+      flags:
+        path: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data/

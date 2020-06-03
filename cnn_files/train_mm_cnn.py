@@ -36,11 +36,17 @@ parser.add_argument(
 parser.add_argument(
     "--output_size", type=int, help="Batch Size.", required=True
 )
+parser.add_argument(
+    "--last_layer_tact", type=int, help="last layer size for FC.", default=26
+)
+parser.add_argument(
+    "--last_layer_vis", type=int, help="last layer size for FC.", default=6
+)
 
 args = parser.parse_args()
 
 
-device = torch.device("cuda:1")
+device = torch.device("cuda:0")
 writer = SummaryWriter(".")
 
 
@@ -81,7 +87,7 @@ class CNN3D(nn.Module):
         out = self.conv2(out)
         out = F.relu(out)
         #print('conv2 out: ', out.shape)
-        out = out.view([batch_size, np.prod([8, 26, 5, 3])])
+        out = out.view([batch_size, np.prod([8, args.last_layer_tact, 5, 3])])
         #print(out.shape)
         
         return out
@@ -103,12 +109,10 @@ class MyNet(nn.Module):
 
         # 8, 35, 5, 3
         # Define the output layer
-        self.fc = nn.Linear(np.prod([8, 26, 5, 3])*2+np.prod([8, 6, 6, 5]), 20)
+        self.fc = nn.Linear(np.prod([8, args.last_layer_tact, 5, 3])*2+np.prod([8, args.last_layer_vis, 6, 5]), args.output_size)
         
         self.drop = nn.Dropout(0.5)
         
-        #self.fc_mlp = nn.Linear(6300, self.input_size)
-
     def forward(self, x_left, x_right, x):
         
         # tactile part
@@ -130,7 +134,7 @@ class MyNet(nn.Module):
         out = self.conv3(out)
         out = F.relu(out)
         #print('conv3 out: ', out.shape)
-        out_vision = out.view([batch_size, np.prod([8, 6, 6, 5])])
+        out_vision = out.view([batch_size, np.prod([8, args.last_layer_vis, 6, 5])])
         
         out = torch.cat([out_left, out_right, out_vision], dim=1)
         
@@ -160,7 +164,7 @@ for epoch in range(1, args.epochs+1):
     correct = 0
     batch_loss = 0
     train_acc = 0
-    for i, (tac_left, tac_right, vis, label) in enumerate(train_loader, 0):
+    for i, (tac_right, tac_left, vis, label) in enumerate(train_loader, 0):
 
         tac_left = tac_left.to(device)
         tac_right = tac_right.to(device)
@@ -192,7 +196,7 @@ for epoch in range(1, args.epochs+1):
     batch_loss = 0
     train_acc = 0
     with torch.no_grad():
-        for i, (tac_left, tac_right, vis, label) in enumerate(train_loader, 0):
+        for i, (tac_right, tac_left, vis, label) in enumerate(train_loader, 0):
             tac_left = tac_left.to(device)
             tac_right = tac_right.to(device)
             vis = vis.to(device)
@@ -215,7 +219,7 @@ for epoch in range(1, args.epochs+1):
     batch_loss = 0
     test_acc = 0
     with torch.no_grad():
-        for i, (tac_left, tac_right, vis, label) in enumerate(test_loader, 0):
+        for i, (tac_right, tac_left, vis, label) in enumerate(test_loader, 0):
             tac_left = tac_left.to(device)
             tac_right = tac_right.to(device)
             vis = vis.to(device)

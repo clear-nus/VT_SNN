@@ -439,3 +439,116 @@
       main: cnn_files/tactile_rectangular_shape
       flags:
         path: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+    tact-cnn3d-slip:
+      description: Train tactile model usin CNN3D slip
+      main:  cnn_files/train_tac_cnn
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - tsample
+        - lr
+        - sample_file
+        - output_size
+        - checkpoint_dir
+        - last_layer
+      flags:
+        batch_size: 8
+        epochs: 200
+        lr: 0.00001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data/
+        sample_file: 1
+        output_size: 2
+        checkpoint_dir: .
+        last_layer: 11
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =output_size
+        - =last_layer
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+    vis-cnn3d-slip:
+      description: Train vision model using CNN3D for slip
+      main: cnn_files/train_vis_cnn
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - lr
+        - sample_file
+        - hidden_size
+        - output_size
+        - checkpoint_dir
+        - last_layer
+      flags:
+        batch_size: 8
+        epochs: 700
+        lr: 0.00001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data/
+        sample_file: 1
+        output_size: 2
+        checkpoint_dir: .
+        last_layer: 2
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =last_layer
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+    mm-cnn3d-slip:
+      description: Train multimodal model using CNN3D for slippage detection
+      main: cnn_files/train_mm_cnn
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - lr
+        - sample_file
+        - output_size
+        - checkpoint_dir
+        - last_layer_tact
+        - last_layer_vis
+      flags:
+        batch_size: 8
+        epochs: 600
+        lr: 0.00001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data/
+        sample_file: 1
+        output_size: 2
+        checkpoint_dir: .
+        last_layer_tact: 11
+        last_layer_vis: 2
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =output_size
+        - =last_layer_tact
+        - =last_layer_vis
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train

@@ -81,7 +81,7 @@ class MultiMLP_GRU(nn.Module):
         return y_pred
 
 
-device = torch.device("cuda")
+device = torch.device("cuda:2")
 writer = SummaryWriter(".")
 
 net = MultiMLP_GRU().to(device)

@@ -37,6 +37,9 @@ parser.add_argument(
 parser.add_argument(
     "--output_size", type=int, help="Batch Size.", required=True
 )
+parser.add_argument(
+    "--last_layer", type=int, help="last layer size for FC.", default=26
+)
 
 args = parser.parse_args()
 
@@ -72,7 +75,7 @@ class CNN3D(nn.Module):
         self.conv3 = nn.Conv3d(in_channels=4, out_channels=8, kernel_size=(5,3,3), stride=(3,2,2))
 
         # Define the output layer
-        self.fc = nn.Linear(np.prod([8, 6, 6, 5]), args.output_size)
+        self.fc = nn.Linear(np.prod([8, args.last_layer, 6, 5]), args.output_size)
         
         self.drop = nn.Dropout(0.5)
         
@@ -93,7 +96,7 @@ class CNN3D(nn.Module):
         out = self.conv3(out)
         out = F.relu(out)
         #print('conv3 out: ', out.shape)
-        out = out.view([batch_size, np.prod([8, 6, 6, 5])])
+        out = out.view([batch_size, np.prod([8, args.last_layer, 6, 5])])
         out = self.fc(out)
         # use dropout to have better generalization
         out = self.drop(out)

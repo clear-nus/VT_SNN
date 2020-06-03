@@ -33,6 +33,9 @@ parser.add_argument(
 parser.add_argument(
     "--output_size", type=int, help="Batch Size.", required=True
 )
+parser.add_argument(
+    "--last_layer", type=int, help="last layer size for FC.", default=26
+)
 
 args = parser.parse_args()
 
@@ -79,7 +82,7 @@ class CNN3D(nn.Module):
         out = self.conv2(out)
         out = F.relu(out)
         #print('conv2 out: ', out.shape)
-        out = out.view([batch_size, np.prod([8, 26, 5, 3])])
+        out = out.view([batch_size, np.prod([8, args.last_layer, 5, 3])])
         #print(out.shape)
         
         return out
@@ -97,7 +100,7 @@ class MyNet(nn.Module):
 
         # 8, 35, 5, 3
         # Define the output layer
-        self.fc = nn.Linear(np.prod([8, 26, 5, 3])*2, args.output_size)
+        self.fc = nn.Linear(np.prod([8, args.last_layer, 5, 3])*2, args.output_size)
         
         self.drop = nn.Dropout(0.5)
 
@@ -133,7 +136,7 @@ for epoch in range(1, args.epochs+1):
     correct = 0
     batch_loss = 0
     train_acc = 0
-    for i, (tac_left, tac_right, _, label) in enumerate(train_loader, 0):
+    for i, (tac_right, tac_left, _, label) in enumerate(train_loader, 0):
 
         tac_left = tac_left.to(device)
         tac_right = tac_right.to(device)
@@ -167,7 +170,7 @@ for epoch in range(1, args.epochs+1):
     batch_loss = 0
     train_acc = 0
     with torch.no_grad():
-        for i, (tac_left, tac_right, _, label) in enumerate(train_loader, 0):
+        for i, (tac_right, tac_left, _, label) in enumerate(train_loader, 0):
             tac_left = tac_left.to(device)
             tac_right = tac_right.to(device)
             label = label.to(device)
