@@ -36,7 +36,7 @@ device = torch.device("cuda")
 net = SlayerLoihiMLP(
     params, input_size, args.hidden_size, output_size, quantize=False
 ).to(device)
-net.load_state_dict(torch.load("weights-{args.epochs}.pt"))
+net.load_state_dict(torch.load(f"weights-{args.epochs}.pt"))
 net.fc1.weight.data = snn.utils.quantize(net.fc1.weight, 2)
 net.fc2.weight.data = snn.utils.quantize(net.fc2.weight, 2)
 

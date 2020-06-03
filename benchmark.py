@@ -114,18 +114,19 @@ for i, (tact, _, _, _) in enumerate(test_loader):
 
 end_tag = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 elapsed_time = time.time() - start_time
-print("Elapsed time: %4f" % elapsed_time)
-print("Number of inferences: %d" % args.num_inf)
 
 time.sleep(5)
 
 proc.terminate()  # Terminate logging to CSV
+
+time.sleep(5)
 
 
 def format(timestamp):
     """Convert timestamp to format used by nvidia-smi, s-tui for matching"""
     timestamp = timestamp.replace("/", "-")
     timestamp = timestamp.replace(" ", "_")
+    timestamp = timestamp.split(".")[0]
 
     return timestamp
 
@@ -184,7 +185,7 @@ for time, watts in log_data:
     sample["total_joules_per_inf"] = sample["total_joules"] / inf_per_dt
     sample["dynamic_joules_per_inf"] = sample["dynamic_joules"] / inf_per_dt
 
-    samples.append(sample)
+print(sample)
 
 with open(args.log, "w") as jfile:
     json.dump(sample, jfile)
