@@ -272,6 +272,7 @@
         - hidden_size
         - output_size
         - checkpoint_dir
+        - output_size
       flags:
         batch_size: 8
         epochs: 400
@@ -280,12 +281,14 @@
         sample_file: 1
         hidden_size: 32
         checkpoint_dir: .
+        output_size: 20
       compare:
         - =batch_size
         - =epochs
         - =lr
         - =sample_file
         - =hidden_size
+        - =output_size
         - loss/train as loss_train
         - max acc/train as max_acc_train
         - loss/test as loss_test
@@ -434,4 +437,3 @@
       main: cnn_files/tactile_rectangular_shape
       flags:
         path: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        
