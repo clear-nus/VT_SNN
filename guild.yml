@@ -67,6 +67,7 @@
         sample_file: 1
         hidden_size: 32
         checkpoint_dir: . 
+        output_size: 20
         loss_type: 0
       compare:
         - =batch_size
@@ -81,6 +82,7 @@
         - =sample_file
         - =hidden_size
         - =loss_type
+        - =output_size
         - loss/train as loss_train
         - max acc/train as max_acc_train
         - loss/test as loss_test
