@@ -1,3 +1,28 @@
+""" VT-SNN data preprocessor.
+
+Usage (from root directory):
+
+1. With guild:
+
+guild run preprocess save_path=/path/to/save \
+  tactile_path=/path/to/tact/ \
+  video_path=/path/to/video/ \
+  trajectory_path=/path/to/traj
+
+2. With plain Python:
+
+python vtsnn/preprocess.py \
+  --save_path /path/to/save \
+  --video_path /path/to/video \
+  --trajectory_path /path/to/traj \
+  --threshold 1 \
+  --selection grasp_lift_hold \
+  --modes vitac \
+  --bin_duration 0.02 \
+  --n_sample_per_object 20 \
+  --slip 0
+"""
+
 import pandas as pd
 import numpy as np
 import os
@@ -5,21 +30,16 @@ import logging
 import datetime
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedKFold
 from joblib import Parallel, delayed
 from pathlib import Path
 
 from collections import namedtuple
 import argparse
 
-np.random.seed(0)
-
-logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-
-log = logging.getLogger()
-
 Trajectory = namedtuple(
-    "Trajectory", ["start", "reaching", "reached", "grasping", "lifting", "holding"]
+    "Trajectory",
+    ["start", "reaching", "reached", "grasping", "lifting", "holding"],
 )
 
 selections = {  # index, offset, length
@@ -30,16 +50,18 @@ selections = {  # index, offset, length
     "hold": [4, 2.0, 1.25],
     "lift_hold": [4, 0.0, 2.0],
     "grasp_lift": [3, 0.0, 4.75],
-    "grasp_lift_hold": [3, 0.0, 6.5]
+    "grasp_lift_hold": [3, 0.0, 6.5],
 }
+
 
 class Modes:
     TACT, VIS = range(2)
 
 
-parser = argparse.ArgumentParser(description="Data preprocessor.")
+parser = argparse.ArgumentParser(description="VT-SNN data preprocessor.")
+
 parser.add_argument(
-    "--save_dir", type=str, help="Location to save data to.", required=True
+    "--save_path", type=str, help="Location to save data to.", required=True
 )
 parser.add_argument(
     "--tactile_path", type=str, help="Path to tactile dataset.", required=True
@@ -55,12 +77,18 @@ parser.add_argument(
     "--threshold", type=int, help="Threshold for tactile.", required=True
 )
 parser.add_argument(
-    "--n_sample_per_object", type=int, help="Number of samples per class.", required=True
+    "--n_sample_per_object",
+    type=int,
+    help="Number of samples per class.",
+    required=True,
 )
 parser.add_argument(
-    "--slip", type=int, help="is this data preprocessing for slip?.", required=True
+    "--slip",
+    type=int,
+    help="is this data preprocessing for slip?.",
+    required=True,
 )
-
+parser.add_argument("--seed", type=int, help="Random seed to use", default=100)
 
 parser.add_argument(
     "--selection",
@@ -82,8 +110,16 @@ parser.add_argument(
 parser.add_argument(
     "--remove_outlier", type=int, help="removes outliers", required=True
 )
+parser.add_argument(
+    "--num_splits",
+    type=int,
+    help="Number of splits for stratified K-folds.",
+    default=5,
+)
+
 args = parser.parse_args()
 
+# TODO: remove
 # THIS READ TACTILE CODE for new sensors
 # def read_tactile_file(tactile_path, obj_name):
 #     """Reads a tactile file from path. Returns a pandas dataframe."""
@@ -95,6 +131,7 @@ args = parser.parse_args()
 #         dtype={'polarity': int, 'cell_index': int, 'timestamp': float}
 #     )
 #     return df
+
 
 def read_tactile_file(tactile_path, obj_name):
     """Reads a tactile file from path. Returns a pandas dataframe."""
@@ -149,9 +186,14 @@ class TactileData:
 
         while end_t <= self.T + init_t:  # start_t <= self.T
             _pos_count = pos_df[
-                ((pos_df.timestamp >= self.start_t) & (pos_df.timestamp < end_t))
+                (
+                    (pos_df.timestamp >= self.start_t)
+                    & (pos_df.timestamp < end_t)
+                )
             ]
-            _pos_selective_cells = _pos_count.cell_index.value_counts() > self.threshold
+            _pos_selective_cells = (
+                _pos_count.cell_index.value_counts() > self.threshold
+            )
             if len(_pos_selective_cells):
                 data_matrix[
                     _pos_selective_cells[_pos_selective_cells].index.values - 1,
@@ -160,9 +202,14 @@ class TactileData:
                 ] = 1
 
             _neg_count = neg_df[
-                ((neg_df.timestamp >= self.start_t) & (neg_df.timestamp < end_t))
+                (
+                    (neg_df.timestamp >= self.start_t)
+                    & (neg_df.timestamp < end_t)
+                )
             ]
-            _neg_selective_cells = _neg_count.cell_index.value_counts() > self.threshold
+            _neg_selective_cells = (
+                _neg_count.cell_index.value_counts() > self.threshold
+            )
             if len(_neg_selective_cells):
                 data_matrix[
                     _neg_selective_cells[_neg_selective_cells].index.values - 1,
@@ -201,7 +248,7 @@ class CameraData:
         a = td_data["x"][0][0]
         b = td_data["y"][0][0]
         mask_x = (a >= 230) & (a < 430)
-        mask_y = (b >= 100)
+        mask_y = b >= 100
         a1 = a[mask_x & mask_y] - 230
         b1 = b[mask_x & mask_y] - 100
         df.x = a1.flatten()
@@ -228,28 +275,42 @@ class CameraData:
 
         while end_t <= self.T + init_t:  # start_t <= self.T
             _pos_count = pos_df[
-                ((pos_df.timestamp >= self.start_t) & (pos_df.timestamp < end_t))
+                (
+                    (pos_df.timestamp >= self.start_t)
+                    & (pos_df.timestamp < end_t)
+                )
             ]
             b = pd.DataFrame(index=_pos_count.index)
             b = b.assign(
-                xy=_pos_count["x"].astype(str) + "_" + _pos_count["y"].astype(str)
+                xy=_pos_count["x"].astype(str)
+                + "_"
+                + _pos_count["y"].astype(str)
             )
             mask = b.xy.value_counts() >= self.threshold
             some_array = mask[mask].index.values.astype(str)
-            xy = np.array(list(map(lambda x: x.split("_"), some_array))).astype(int)
+            xy = np.array(list(map(lambda x: x.split("_"), some_array))).astype(
+                int
+            )
             if xy.shape[0] > 0:
                 data_matrix[0, xy[:, 0], xy[:, 1], count] = 1
 
             _neg_count = neg_df[
-                ((neg_df.timestamp >= self.start_t) & (neg_df.timestamp < end_t))
+                (
+                    (neg_df.timestamp >= self.start_t)
+                    & (neg_df.timestamp < end_t)
+                )
             ]
             b = pd.DataFrame(index=_neg_count.index)
             b = b.assign(
-                xy=_neg_count["x"].astype(str) + "_" + _neg_count["y"].astype(str)
+                xy=_neg_count["x"].astype(str)
+                + "_"
+                + _neg_count["y"].astype(str)
             )
             mask = b.xy.value_counts() >= self.threshold
             some_array = mask[mask].index.values.astype(str)
-            xy = np.array(list(map(lambda x: x.split("_"), some_array))).astype(int)
+            xy = np.array(list(map(lambda x: x.split("_"), some_array))).astype(
+                int
+            )
             if xy.shape[0] > 0:
                 data_matrix[1, xy[:, 0], xy[:, 1], count] = 1
 
@@ -261,15 +322,12 @@ class CameraData:
 
         return data_matrix
 
-def tact_bin_save(file_name, overall_count, bin_duration, selection, save_dir):
+
+def tact_bin_save(file_name, overall_count, bin_duration, selection, save_path):
     tac_data = TactileData(file_name, selection)
     tacData = tac_data.binarize(bin_duration)
-    f = save_dir / f"{overall_count}_tact.npy"
-    if overall_count == 0:
-        print(tacData.shape)
-        a,b = np.unique(tacData, return_counts=True)
-        print(a, b)
-    log.info(f"Writing {f}...")
+    f = save_path / f"{overall_count}_tact.npy"
+    print(f"Writing {f}...")
     np.save(f, tacData.astype(np.uint8))
 
 
@@ -277,7 +335,7 @@ def vis_bin_save(file_name, overall_count, bin_duration, selection, save_dir):
     cam_data = CameraData(file_name, selection)
     visData = cam_data.binarize(bin_duration)
     f = save_dir / f"{overall_count}_vis.npy"
-    log.info(f"Writing {f}...")
+    print(f"Writing {f}...")
     np.save(f, visData.astype(np.uint8))
 
 
@@ -319,9 +377,13 @@ class ViTacData:
                     )
                 overall_count += 1
         if Modes.TACT in modes:
-            Parallel(n_jobs=18)(delayed(tact_bin_save)(*zz) for zz in big_list_tact)
+            Parallel(n_jobs=18)(
+                delayed(tact_bin_save)(*zz) for zz in big_list_tact
+            )
         if Modes.VIS in modes:
-            Parallel(n_jobs=18)(delayed(vis_bin_save)(*zz) for zz in big_list_vis)
+            Parallel(n_jobs=18)(
+                delayed(vis_bin_save)(*zz) for zz in big_list_vis
+            )
 
 
 # batch2
@@ -349,17 +411,16 @@ if args.slip == 0:
         "110-e_coffee_can",
     ]
 elif args.slip == 1:
-    list_of_objects2 = [
-        'stable',
-        'rotate'
-    ]
+    list_of_objects2 = ["stable", "rotate"]
 
-ViTac = ViTacData(Path(args.save_dir), list_of_objects2, selection=args.selection)
+ViTac = ViTacData(
+    Path(args.save_path), list_of_objects2, selection=args.selection
+)
 
 modes = []
 
 if args.modes == "vi":
-    modes.append( Modes.VIS) 
+    modes.append(Modes.VIS)
 elif args.modes == "tac":
     modes.append(Modes.TACT)
 elif args.modes == "vitac":
@@ -376,31 +437,37 @@ overall_count = -1
 for obj in list_of_objects2:
     current_label += 1
     for i in range(0, args.n_sample_per_object):
-        overall_count+=1
+        overall_count += 1
         labels.append([overall_count, current_label])
 labels = np.array(labels)
 
 # stratified k fold
-from sklearn.model_selection import StratifiedKFold
-
-skf = StratifiedKFold(n_splits=5, random_state=100, shuffle=True)
+skf = StratifiedKFold(n_splits=args.num_splits, random_state=100, shuffle=True)
 train_indices = []
 test_indices = []
 
 
-for train_index, test_index in  skf.split(np.zeros(len(labels)), labels[:,1]):
+for train_index, test_index in skf.split(np.zeros(len(labels)), labels[:, 1]):
     train_indices.append(train_index)
     test_indices.append(test_index)
-    #print("TRAIN:", train_index, "TEST:", test_index)
 
-print('Training size:', len(train_indices[0]),', Testing size:',  len(test_indices[0]))
+print(
+    "Training size:",
+    len(train_indices[0]),
+    ", Testing size:",
+    len(test_indices[0]),
+)
 
-# write to the file
-splits = ['80_20_1','80_20_2','80_20_3','80_20_4', '80_20_5']
-count = 0
-for split in splits:
-    np.savetxt(args.save_dir + 'train_' + split + '.txt', np.array(labels[train_indices[count], :], dtype=int), fmt='%d', delimiter='\t')
-    np.savetxt(args.save_dir + 'test_' + split + '.txt', np.array(labels[test_indices[count], :], dtype=int), fmt='%d', delimiter='\t')
-    count += 1
-
-# End of TAS edit ----------------------------------------
+for split in range(args.num_splits):
+    np.savetxt(
+        Path(args.save_path) / f"train_80_20_{split+1}.txt",
+        np.array(labels[train_indices[split], :], dtype=int),
+        fmt="%d",
+        delimiter="\t",
+    )
+    np.savetxt(
+        Path(args.save_path) / f"test_80_20_{split+1}.txt",
+        np.array(labels[test_indices[split], :], dtype=int),
+        fmt="%d",
+        delimiter="\t",
+    )

@@ -3,26 +3,22 @@
   data-files:
     - network_config/*.yml
 
-- model: vtsnn
-  description: VT-SNN models
-  sourcecode:
-    select:
-      - exclude: slayerPytorch
-  operations:
-    prepare-data:
-      description: Preprocess data for training
+- operations:
+    preprocess:
+      description: Preprocess raw data for training.
       main: vtsnn.preprocess
       flags:
-        save_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        save_path: /home/jethro/data_VTSNN_test/
         tactile_path: /datasets/eventdata/batch2/aces_recordings/
         video_path: /datasets/eventdata/batch2/prophesee_recordings/
         trajectory_path: /datasets/eventdata/batch2/traj_start_ends/
         threshold: 1
         selection: grasp_lift_hold
-        modes: vitac # vi, tac, vitac
+        modes: vitac
         bin_duration: 0.02
         n_sample_per_object: 20
         remove_outlier: 0
+        slip: 0
     downsample-vision:
       description: Downsample vision data with sum pool and save as one file
       main: vtsnn.downsample_images
