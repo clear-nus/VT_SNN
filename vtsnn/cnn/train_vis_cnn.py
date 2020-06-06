@@ -8,7 +8,7 @@ import numpy as np
 from pathlib import Path
 import logging
 from torch.utils.data import DataLoader
-from dataset import ViTacVisDataset
+from vtsnn.dataset import ViTacVisDataset
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 from torch import nn

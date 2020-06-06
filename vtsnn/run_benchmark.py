@@ -10,17 +10,17 @@ import numpy as np
 import slayerSNN as snn
 from pathlib import Path
 import logging
-from snn_models.baseline_snn import SlayerLoihiMLP
+from vtsnn.models.snn.baseline_snn import SlayerLoihiMLP
 from slayerSNN import optimizer as optim
 from slayerSNN import loihi as spikeLayer
 from slayerSNN import quantizeParams as quantize
 from torch.utils.data import DataLoader
-from dataset import ViTacDataset
+from vtsnn.dataset import ViTacDataset
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 
 from datetime import datetime
-from snn_models.baseline_snn import SlayerLoihiMLP
+from vtsnn.models.snn.baseline_snn import SlayerLoihiMLP
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_dir", type=str, help="Path to data.", required=True)

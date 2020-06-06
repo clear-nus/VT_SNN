@@ -10,7 +10,7 @@ from pathlib import Path
 import logging
 import argparse
 from torch.utils.tensorboard import SummaryWriter
-from dataset import ViTacMMDataset
+from vtsnn.dataset import ViTacMMDataset
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger()

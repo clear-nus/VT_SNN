@@ -3,10 +3,9 @@ import numpy as np
 import slayerSNN as snn
 from pathlib import Path
 import logging
-from snn_models.multimodal_snn import EncoderVis
-from snn_models.baseline_snn import SlayerMLP
+from vtsnn.models.snn.baseline_snn import SlayerMLP
 from torch.utils.data import DataLoader
-from dataset import ViTacVisDataset
+from vtsnn.dataset import ViTacDataset
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 
@@ -14,16 +13,13 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
 log = logging.getLogger()
 
-parser = argparse.ArgumentParser("Train Viz model.")
+parser = argparse.ArgumentParser("Train model.")
 parser.add_argument("--epochs", type=int, help="Number of epochs.", required=True)
 parser.add_argument("--data_dir", type=str, help="Path to data.", required=True)
 parser.add_argument(
     "--checkpoint_dir", type=str, help="Path for saving checkpoints.", required=True
 )
 parser.add_argument("--tsample", type=int, help="tSample", required=True)
-parser.add_argument(
-    "--tsr_start", type=int, help="Target Spike Region Start", required=True
-)
 parser.add_argument(
     "--tsr_stop", type=int, help="Target Spike Region Stop", required=True
 )
@@ -34,10 +30,7 @@ parser.add_argument(
     "--sample_file", type=int, help="Sample number to train from.", required=True
 )
 parser.add_argument(
-    "--batch_size", type=int, help="Batch Size.", required=True
-)
-parser.add_argument(
-    "--output_size", type=int, help="Output Size.", required=True
+    "--hidden_size", type=int, help="Size of hidden layer.", required=True
 )
 parser.add_argument(
     "--theta", type=float, help="SRM threshold.", required=True
@@ -46,8 +39,13 @@ parser.add_argument(
 parser.add_argument(
     "--tauRho", type=float, help="spike pdf parameter.", required=True
 )
+
 parser.add_argument(
-    "--hidden_size", type=int, help="Size of hidden layer.", required=True
+    "--batch_size", type=int, help="Batch Size.", required=True
+)
+
+parser.add_argument(
+    "--output_size", type=int, help="Number of classes", default=20
 )
 parser.add_argument(
     "--loss_type", type=int, help="0:numSpikes or 1:weightedNumSpikes", required=True
@@ -60,19 +58,19 @@ LOSS_TYPES = ['NumSpikes', 'WeightedNumSpikes']
 params = {
     "neuron": {
         "type": "SRMALPHA",
-        "theta": args.theta,
-        "tauSr": 10.0,
-        "tauRef": 1.0,
-        "scaleRef": 2,
+        "theta": args.theta, # activation threshold
+        "tauSr": 10.0, # time constant for srm kernel
+        "tauRef": 1.0, # refractory kernel time constant
+        "scaleRef": 2, # refractory kernel constant relative to theta
         "tauRho": args.tauRho, # pdf
-        "scaleRho": 1,
+        "scaleRho": 1, # membrane potential 
     },
     "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
     "training": {
         "error": {
             "type": LOSS_TYPES[args.loss_type],  # "NumSpikes" or "WeightedNumSpikes"
             "tgtSpikeRegion": {  # valid for NumSpikes and ProbSpikes
-                "start": args.tsr_start,
+                "start": 0,
                 "stop": args.tsr_stop,
             },
             "tgtSpikeCount": {True: args.sc_true, False: args.sc_false},
@@ -81,11 +79,11 @@ params = {
 }
 
 input_size = 156  # Tact
+output_size = args.output_size # 20
 
-device = torch.device("cuda")
+device = torch.device("cuda:0")
 writer = SummaryWriter(".")
-#net = EncoderVis(params, args.output_size).to(device)
-net = SlayerMLP(params, (50, 63, 2), args.hidden_size, args.output_size).to(device)
+net = SlayerMLP(params, input_size, args.hidden_size, output_size).to(device)
 
 error = snn.loss(params).to(device)
 
@@ -98,14 +96,14 @@ optimizer = torch.optim.RMSprop(
     net.parameters(), lr=args.lr, weight_decay=0.5
 )
 
-train_dataset = ViTacVisDataset(
-    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=args.output_size
+train_dataset = ViTacDataset(
+    path=args.data_dir, sample_file=f"train_80_20_{args.sample_file}.txt", output_size=output_size
 )
 train_loader = DataLoader(
     dataset=train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
 )
-test_dataset = ViTacVisDataset(
-    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=args.output_size
+test_dataset = ViTacDataset(
+    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=output_size
 )
 test_loader = DataLoader(
     dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=4
@@ -116,23 +114,23 @@ def _train():
     num_samples = 0
     losses = [0, 0, 0]
     net.train()
-    for i, (vis, target, label) in enumerate(train_loader):
-        vis = vis.to(device)
+    for i, (tact, _, target, label) in enumerate(train_loader):
+        tact = tact.to(device)
         target = target.to(device)
-        output = net.forward(vis)
+        output = net.forward(tact)
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
 
-        #spike_loss = error.numSpikes(output, target) # numSpikes, weightedNumSpikes
-        spike_loss = criteria(output, target)
+        #spike_loss = error.weightedNumSpikes(output, target) # numSpikes
+        
+        spike_loss = criteria(output, target) # numSpikes
         
         loss = spike_loss
-
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        
+
     writer.add_scalar("loss/train", spike_loss / len(train_loader), epoch)
     writer.add_scalar("acc/train", correct / num_samples, epoch)
 
@@ -144,16 +142,15 @@ def _test():
     losses = [0, 0, 0]
     net.eval()
     with torch.no_grad():
-        for i, (vis, target, label) in enumerate(test_loader):
-            vis = vis.to(device)
+        for i, (tact, _, target, label) in enumerate(test_loader):
+            tact = tact.to(device)
             target = target.to(device)
-            output = net.forward(vis)
+            output = net.forward(tact)
             correct += torch.sum(snn.predict.getClass(output) == label).data.item()
             num_samples += len(label)
 
-            #spike_loss = error.numSpikes(output, target) # numSpikes, weightedNumSpikes
-            spike_loss = criteria(output, target)
-            
+            #spike_loss = error.weightedNumSpikes(output, target) # numSpikes
+            spike_loss = criteria(output, target) # numSpikes
             loss = spike_loss
 
         writer.add_scalar("loss/test", spike_loss / len(test_loader), epoch)
@@ -165,7 +162,7 @@ def _test():
 def _save_model(epoch):
     log.info(f"Writing model at epoch {epoch}...")
     checkpoint_path = (
-        Path(args.checkpoint_dir) / f"vis_weights_{epoch:03d}_{args.sample_file:02d}.pt"
+            Path(args.checkpoint_dir) / f"tac_weights_{epoch:03d}_{args.sample_file:02d}.pt"
     )
     torch.save(net.state_dict(), checkpoint_path)
 
@@ -173,5 +170,5 @@ for epoch in range(1, args.epochs + 1):
     _train()
     if epoch % 10 == 0:
         test_loss = _test()
-    if epoch % 50 == 0:
+    if epoch % 100 == 0:
         _save_model(epoch)

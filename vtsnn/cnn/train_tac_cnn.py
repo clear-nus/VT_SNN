@@ -8,7 +8,7 @@ import argparse
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
-from dataset import ViTacDataset
+from vtsnn.dataset import ViTacDataset
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")

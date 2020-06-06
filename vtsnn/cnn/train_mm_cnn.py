@@ -11,7 +11,7 @@ import argparse
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
-from dataset import ViTacMMDataset
+from vtsnn.dataset import ViTacMMDataset
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")

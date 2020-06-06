@@ -4,9 +4,9 @@ import slayerSNN as snn
 from pathlib import Path
 import logging
 #from models.slayer_multimodal import SlayerMM
-from snn_models.multimodal_snn import SlayerMM
+from vtsnn.models.snn.multimodal_snn import SlayerMM
 from torch.utils.data import DataLoader
-from dataset import ViTacMMDataset
+from vtsnn.dataset import ViTacMMDataset
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 

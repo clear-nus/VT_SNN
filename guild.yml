@@ -1,5 +1,5 @@
-- package: vtsnn
-  version: 0.0.0
+- package: gpkg.vtsnn
+  version: 0.1
   data-files:
     - network_config/*.yml
 
@@ -11,7 +11,7 @@
   operations:
     prepare-data:
       description: Preprocess data for training
-      main: preprocess
+      main: vtsnn.preprocess
       flags:
         save_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
         tactile_path: /datasets/eventdata/batch2/aces_recordings/
@@ -25,7 +25,7 @@
         remove_outlier: 0
     downsample-vision:
       description: Downsample vision data with sum pool and save as one file
-      main: downsample_images
+      main: vtsnn.downsample_images
       flags:
         path: /home/tasbolat/some_python_examples/data_VT_SNN_new/
         theta: 10
@@ -34,7 +34,7 @@
         count: 400 # total number of samples
     tact-snn:
       description: Train tactile model using SNN
-      main: train_tac_snn
+      main: vtsnn.train_tac_snn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -91,7 +91,7 @@
         - acc/train as acc_train
     vis-snn:
       description: Train vizual model
-      main: train_vis_snn
+      main: vtsnn.train_vis_snn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -149,7 +149,7 @@
         - max acc/test as max_acc_test
     mm-snn:
       description: Train MM model
-      main: train_mm_snn
+      main: vtsnn.train_mm_snn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -215,7 +215,7 @@
         - max acc/test as max_acc_test
     benchmark:
       description: Run benchmarks on trained model
-      main: run_benchmark
+      main: vtsnn.run_benchmark
       flags:
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN/slip_data/bin_150/
         bsize: 1
@@ -228,7 +228,7 @@
         saved_weights: /home/jethro/.pyenv/versions/miniconda3-4.3.30/.guild/runs/3d77e9ed1e4c4a8a9d3f67582d3aa391/weights-600-2.360.pt
     tact-ann:
       description: Train tactile model using ANN (MLP-GRU)
-      main: train_tac_ann
+      main: vtsnn.train_tac_ann
       output-scalars: no
       objective:
         maximize: acc/test
@@ -262,7 +262,7 @@
         - acc/train as acc_train
     vis-ann:
       description: Train vision model using ANN (MLP-GRU)
-      main: train_vis_ann
+      main: vtsnn.train_vis_ann
       output-scalars: no
       objective:
         maximize: acc/test
@@ -299,7 +299,7 @@
         - acc/train as acc_train
     mm-ann:
       description: Train multimodal model using ANN (MLP-GRU)
-      main: train_mm_ann
+      main: vtsnn.train_mm_ann
       output-scalars: no
       objective:
         maximize: acc/test
@@ -335,7 +335,7 @@
         - acc/train as acc_train
     tact-cnn3d:
       description: Train tactile model usin CNN3D
-      main: cnn_files/train_tac_cnn
+      main: vtsnn.cnn.train_tac_cnn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -369,7 +369,7 @@
         - acc/train as acc_train
     vis-cnn3d:
       description: Train vision model using CNN3D
-      main: cnn_files/train_vis_cnn
+      main: vtsnn.cnn.train_vis_cnn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -403,7 +403,7 @@
         - acc/train as acc_train
     mm-cnn3d:
       description: Train multimodal model using CNN3D
-      main: cnn_files/train_mm_cnn
+      main: vtsnn.cnn.train_mm_cnn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -436,12 +436,12 @@
         - acc/train as acc_train
     make-tactile-rectangular:
       description: Converts tactile data into rectangular shape
-      main: cnn_files/tactile_rectangular_shape
+      main: vtsnn.cnn.tactile_rectangular_shape
       flags:
         path: /home/tasbolat/some_python_examples/data_VT_SNN_new/
     tact-cnn3d-slip:
       description: Train tactile model usin CNN3D slip
-      main:  cnn_files/train_tac_cnn
+      main: vtsnn.cnn.train_tac_cnn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -478,7 +478,7 @@
         - acc/train as acc_train
     vis-cnn3d-slip:
       description: Train vision model using CNN3D for slip
-      main: cnn_files/train_vis_cnn
+      main: vtsnn.cnn.train_vis_cnn
       output-scalars: no
       objective:
         maximize: acc/test
@@ -515,7 +515,7 @@
         - acc/train as acc_train
     mm-cnn3d-slip:
       description: Train multimodal model using CNN3D for slippage detection
-      main: cnn_files/train_mm_cnn
+      main: vtsnn.cnn.train_mm_cnn
       output-scalars: no
       objective:
         maximize: acc/test
