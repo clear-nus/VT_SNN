@@ -11,50 +11,72 @@ container classification and rotational slip detection.
 
 ![img](img/VT_SNN.png)
 
-## update
-CNN3D models are being tested ...
+## Requirements
 
-## Overall structure of the codes
-This git consists of two main parts: object classification and slip detection.
-For each task, we developed SNN model and its ANN counterpart. Please follow
-below instruction to run the code.
+The requirements for this project that can be installed from PyPI are found in
+`requirements.txt`. To install the requirements, run:
 
-## Installation 
-
-1. [SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn a
-   Spiking Neural Network (SNN).
-   
-   ```
-   git clone https://github.com/bamsumit/slayerPytorch
-   cd slayerPytorch
-   python setup.py install
-   ```
-
-2. Install package requirements:
-
-```python
+``` bash
 pip install -r requirements.txt
 ```
 
-3. We use [guild.ai](https://github.com/guildai/guildai) to track experiment
-runs. See training progress with `guild tensorboard`, and a quick overview of
-metrics with `guild compare`.
+<!-- TODO -->
 
-## Pre-processing data
+This project also requires a fork of the
+[SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn a Spiking
+Neural Network (SNN). To install this dependency, run:
 
-Preprocessing involves binning spikes, for both the visual and tactile
-data.
-
-1. 
+``` bash
+   git clone https://github.com/bamsumit/slayerPytorch
+   cd slayerPytorch
+   python setup.py install
 ```
-    guild run vtsnn:prepare-data
 
-```
-2. 
-```
-    guild run vtsnn:downsample-vision
+This repository has been tested on Python 3.6.10.
 
+## Usage
+
+We provide the scripts for preprocessing the raw event data, and training the
+models in the `vtsnn` folder. Instructions for running each script can be found
+in each script. 
+
+The repository has been carefully crafted to use
+[guild.ai](https://github.com/guildai/guildai) to track experiment runs, and its
+use is encouraged.
+
+## Example End-to-end Workflow
+
+### Data Processing
+First, fetch the data:
+
+<!-- TODO -->
+``` bash
+ wget ...
 ```
+<!-- TODO: SLIP -->
+
+Next, preprocess the data:
+
+``` bash
+    guild run preprocess 
+```
+
+In our experiments, we also downsample the image data using pooling, before
+passing them as input to speed up training and reduce the input size. These are
+required to match our model input dimensions. To run the downsampling, run:
+
+``` bash
+    guild run downsample
+```
+
+### Training the Models
+
+#### SNN
+
+#### ANN
+
+#### 
+
 ## Models
 
 1. Tactile unimodal
