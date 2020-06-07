@@ -3,7 +3,7 @@ import numpy as np
 import slayerSNN as snn
 from pathlib import Path
 import logging
-from vtsnn.models.snn.baseline_snn import SlayerMLP
+from vtsnn.models.snn import SlayerMLP
 from torch.utils.data import DataLoader
 from vtsnn.dataset import ViTacDataset
 from torch.utils.tensorboard import SummaryWriter

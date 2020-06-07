@@ -1,30 +1,44 @@
 # Event-Driven Visual-Tactile Sensing and Learning for Robots
 
-This work contributes an event-driven visual-tactile perception system, comprising a novel biologically-inspired tactile
-sensor and multi-modal spike-based learning. Our biologically-inspired fingertip tactile sensor, NeuTouch, scales well with the
-number of taxels thanks to its event-based nature. Likewise, our Visual-Tactile Spiking Neural Network (VT-SNN) enables fast
-perception when coupled with event sensors. We evaluate our visual-tactile system (using the NeuTouch and Prophesee event camera) on two robot tasks: container classification and rotational slip detection.
+This work contributes an event-driven visual-tactile perception system,
+comprising a novel biologically-inspired tactile sensor and multi-modal
+spike-based learning. Our biologically-inspired fingertip tactile sensor,
+NeuTouch, scales well with the number of taxels thanks to its event-based
+nature. Likewise, our Visual-Tactile Spiking Neural Network (VT-SNN) enables
+fast perception when coupled with event sensors. We evaluate our visual-tactile
+system (using the NeuTouch and Prophesee event camera) on two robot tasks:
+container classification and rotational slip detection.
 
-<p align="center">
-<img src="https://github.com/tasbolat1/VT_SNN/blob/master/auxiliary_files/VT_SNN.png" height="360" width="400">
-</p>
+![img](img/VT_SNN.png)
 
 ## update
 CNN3D models are being tested ...
 
 ## Overall structure of the codes
-This git consists of two main parts: object classification and slip detection. For each task, we developed SNN model and its ANN counterpart. Please follow below instruction to run the code.
+This git consists of two main parts: object classification and slip detection.
+For each task, we developed SNN model and its ANN counterpart. Please follow
+below instruction to run the code.
 
-## Prerequisits
+## Installation 
 
-1. [SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn a Spiking Neural Network (SNN)
+1. [SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn a
+   Spiking Neural Network (SNN).
+   
+   ```
+   git clone https://github.com/bamsumit/slayerPytorch
+   cd slayerPytorch
+   python setup.py install
+   ```
+
 2. Install package requirements:
-```
+
+```python
 pip install -r requirements.txt
 ```
-3. We use [guild.ai](https://github.com/guildai/guildai) to track
-experiment runs. See training progress with `guild tensorboard`, and a quick overview
-of metrics with `guild compare`.
+
+3. We use [guild.ai](https://github.com/guildai/guildai) to track experiment
+runs. See training progress with `guild tensorboard`, and a quick overview of
+metrics with `guild compare`.
 
 ## Pre-processing data
 

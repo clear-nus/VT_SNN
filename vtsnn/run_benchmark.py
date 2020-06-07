@@ -10,7 +10,7 @@ import numpy as np
 import slayerSNN as snn
 from pathlib import Path
 import logging
-from vtsnn.models.snn.baseline_snn import SlayerLoihiMLP
+from vtsnn.models.loihi import SlayerLoihiMLP
 from slayerSNN import optimizer as optim
 from slayerSNN import loihi as spikeLayer
 from slayerSNN import quantizeParams as quantize
@@ -20,7 +20,6 @@ from torch.utils.tensorboard import SummaryWriter
 import argparse
 
 from datetime import datetime
-from vtsnn.models.snn.baseline_snn import SlayerLoihiMLP
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_dir", type=str, help="Path to data.", required=True)
@@ -38,11 +37,15 @@ input_size = 156  # Tact
 
 device = torch.device("cuda:2")
 params = snn.params(args.network_config)
-net = SlayerLoihiMLP(params, input_size, args.hidden_size, args.output_size).to(device)
+net = SlayerLoihiMLP(params, input_size, args.hidden_size, args.output_size).to(
+    device
+)
 net.load_state_dict(torch.load(args.saved_weights))
 
 test_dataset = ViTacDataset(
-    path=args.data_dir, sample_file=f"test_80_20_{args.sample_file}.txt", output_size=args.output_size
+    path=args.data_dir,
+    sample_file=f"test_80_20_{args.sample_file}.txt",
+    output_size=args.output_size,
 )
 
 test_loader = DataLoader(
@@ -53,9 +56,9 @@ time.sleep(5)  # sleep to distance from setup power consumption
 
 step_count = 0
 start_time = time.time()
-start_tag = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+start_tag = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-print('Loop starting...')
+print("Loop starting...")
 while True:
     # loop over batches until time limit is reached
     for i, (tact, _, _, _) in enumerate(test_loader):
@@ -69,24 +72,24 @@ while True:
         continue
     break
 
-end_tag = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+end_tag = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-print('Elapsed time: %4f' % (time.time() - start_time))
-print('Target time: %2f' % args.time)
-print('Number of inferences: %d' % (step_count * args.bsize))
+print("Elapsed time: %4f" % (time.time() - start_time))
+print("Target time: %2f" % args.time)
+print("Number of inferences: %d" % (step_count * args.bsize))
 
 # write a json summmary of this benchmarking experiment
 if args.log:
     summary = {}
-    summary['hardware'] = "GPU"
-    summary['start_time'] = '_'.join(start_tag.split(' '))
-    summary['end_time'] = '_'.join(end_tag.split(' '))
-    summary['n_seconds'] = args.time
-    summary['n_inferences'] = step_count * args.bsize
-    summary['inf_per_second'] = summary['n_inferences'] / summary['n_seconds']
-    summary['batchsize'] = args.bsize
-    summary['log_name'] = args.log.split('/')[-1]  # use file name, not path
-    summary['status'] = 'Running'
+    summary["hardware"] = "GPU"
+    summary["start_time"] = "_".join(start_tag.split(" "))
+    summary["end_time"] = "_".join(end_tag.split(" "))
+    summary["n_seconds"] = args.time
+    summary["n_inferences"] = step_count * args.bsize
+    summary["inf_per_second"] = summary["n_inferences"] / summary["n_seconds"]
+    summary["batchsize"] = args.bsize
+    summary["log_name"] = args.log.split("/")[-1]  # use file name, not path
+    summary["status"] = "Running"
 
-    with open(args.log, 'w') as jfile:
+    with open(args.log, "w") as jfile:
         json.dump(summary, jfile)
