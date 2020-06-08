@@ -104,8 +104,6 @@ else:  # NOTE: args.hidden_size unused here
         "output_size": output_size,
     }
 
-print(model_args)
-
 device = torch.device("cuda")
 writer = SummaryWriter(".")
 net = model(**model_args).to(device)
@@ -126,6 +124,8 @@ train_dataset = ViTacDataset(
     path=args.data_dir,
     sample_file=f"train_80_20_{args.sample_file}.txt",
     output_size=output_size,
+    spiking=True,
+    mode=args.mode,
 )
 train_loader = DataLoader(
     dataset=train_dataset,
@@ -137,6 +137,8 @@ test_dataset = ViTacDataset(
     path=args.data_dir,
     sample_file=f"test_80_20_{args.sample_file}.txt",
     output_size=output_size,
+    spiking=True,
+    mode=args.mode,
 )
 test_loader = DataLoader(
     dataset=test_dataset,
@@ -145,7 +147,6 @@ test_loader = DataLoader(
     num_workers=8,
 )
 
-
 def _train():
     correct = 0
     num_samples = 0
@@ -153,7 +154,7 @@ def _train():
     for *data, target, label in train_loader:
         data = [d.to(device) for d in data]
         target = target.to(device)
-        output = net.forward(data)
+        output = net.forward(*data)
         correct += torch.sum(snn.predict.getClass(output) == label).data.item()
         num_samples += len(label)
         spike_loss = criteria(output, target)
@@ -174,7 +175,7 @@ def _test():
         for *data, target, label in test_loader:
             data = [d.to(device) for d in data]
             target = target.to(device)
-            output = net.forward(data)
+            output = net.forward(*data)
             correct += torch.sum(
                 snn.predict.getClass(output) == label
             ).data.item()

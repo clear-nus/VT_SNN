@@ -13,7 +13,6 @@ class SlayerMLP(torch.nn.Module):
         self.fc2 = self.slayer.dense(hidden_size, output_size)
 
     def forward(self, spike_input):
-        spike_input = spike_input[0]
         spike_1 = self.slayer.spike(self.slayer.psp(self.fc1(spike_input)))
         spike_output = self.slayer.spike(self.slayer.psp(self.fc2(spike_1)))
         return spike_output

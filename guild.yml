@@ -51,11 +51,11 @@
         - =sample_file
         - =hidden_size
         - =loss
-        - loss/train as loss_train
-        - max acc/train as max_acc_train
-        - acc/train as acc_train
+        - loss/train as loss_train        
         - loss/test as loss_test
+        - acc/train as acc_train        
         - acc/test as acc_test
+        - max acc/train as max_acc_train
         - max acc/test as max_acc_test
   # resources:
   #   config:
@@ -66,6 +66,20 @@
     
 - model: vtsnn-tact-cw
   description: VT-SNN Tactile-only model on Container & Weight Classification
+  extends: vtsnn-base
+  operations:
+    train:
+      description: Train the VT-SNN Tactile-only model on Container & Weight Classification
+      flags:
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        network_config: /home/jethro/container_weight.yml
+        sample_file: 1
+        hidden_size: 32
+        mode: tact
+        task: cw
+
+- model: vtsnn-vis-cw
+  description: VT-SNN Vision-only model on Container & Weight Classification
   extends: vtsnn-base
   operations:
     train:
@@ -132,8 +146,8 @@
         - =loss_type
         - =output_size
         - loss/train as loss_train
-        - max acc/train as max_acc_train
         - loss/test as loss_test
+        - max acc/train as max_acc_train        
         - max acc/test as max_acc_test
         - acc/test as acc_test
         - acc/train as acc_train
