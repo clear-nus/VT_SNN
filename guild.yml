@@ -1,7 +1,7 @@
 - package: gpkg.vtsnn
   version: 0.1
   data-files:
-    - network_config
+    - network_config/*
 
 - model: data  
   description: >
@@ -36,8 +36,8 @@
   operations:
     train:
       main: vtsnn.train_snn
-      # requires:
-      #   - config
+      requires:
+        - config
       flags:
         epochs: 500
         lr: 0.001
@@ -57,12 +57,11 @@
         - acc/test as acc_test
         - max acc/train as max_acc_train
         - max acc/test as max_acc_test
-  # resources:
-  #   config:
-  #     description: SNN network config yml files
-  #     path: .
-  #     sources:
-  #         select: "network_config/*.yml"
+  resources:
+    config:
+      description: SNN network config yml files
+      sources:
+        - file: network_config
     
 - model: vtsnn-tact-cw
   description: VT-SNN tactile-only model on Container & Weight Classification
@@ -72,7 +71,7 @@
       description: Train the VT-SNN tactile-only model on Container & Weight Classification
       flags:
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        network_config: /home/jethro/container_weight.yml
+        network_config: network_config/container_weight.yml
         sample_file: 1
         hidden_size: 32
         mode: tact
@@ -86,7 +85,7 @@
       description: Train the VT-SNN vision-only model on Container & Weight Classification
       flags:
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        network_config: /home/jethro/container_weight.yml
+        network_config: network_config/container_weight.yml
         sample_file: 1
         hidden_size: 32
         mode: vis
@@ -100,7 +99,7 @@
       description: Train the VT-SNN multi-modal model on Container & Weight Classification
       flags:
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        network_config: /home/jethro/container_weight.yml
+        network_config: network_config/container_weight.yml
         sample_file: 1
         hidden_size: 32
         mode: mm
