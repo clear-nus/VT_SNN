@@ -44,7 +44,7 @@ parser.add_argument(
 parser.add_argument(
     "--mode",
     type=str,
-    choices=["tact", "vis", "vistact"],
+    choices=["tact", "vis", "mm"],
     help="Type of model to run.",
     required=True,
 )

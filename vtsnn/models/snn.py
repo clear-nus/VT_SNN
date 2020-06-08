@@ -62,9 +62,6 @@ class SlayerMM(torch.nn.Module):
         spikeLayer1 = self.tactile(spikeInputTact)
         spikeLayer2 = self.vision(spikeInputVis)
         spikeAll = torch.cat([spikeLayer1, spikeLayer2], dim=1)
-        self.spike_trains = (
-            [spikeAll] + self.tactile.spike_trains + self.vision.spike_trains
-        )
-
+        
         out = self.slayer.spike(self.slayer.psp(self.fc1(spikeAll)))
         return out

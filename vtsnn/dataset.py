@@ -45,11 +45,11 @@ class ViTacDataset(Dataset):
                 inputs = [self.tact[input_index]]
         elif self.mode == "vis":
             inputs = [self.vis[input_index]]
-        elif self.mode == "vistact":
+        elif self.mode == "mm":
             if self.rectangular:
-                inputs = [self.right_tact[input_index], self.left_tact[input_index], self.ds_vis[input_index]]
+                inputs = [self.right_tact[input_index], self.left_tact[input_index], self.vis[input_index]]
             else:
-                inputs = [self.tact[input_index], self.ds_vis[input_index]]
+                inputs = [self.tact[input_index], self.vis[input_index]]
 
         return (
             *inputs,

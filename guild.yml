@@ -65,11 +65,11 @@
   #         select: "network_config/*.yml"
     
 - model: vtsnn-tact-cw
-  description: VT-SNN Tactile-only model on Container & Weight Classification
+  description: VT-SNN tactile-only model on Container & Weight Classification
   extends: vtsnn-base
   operations:
     train:
-      description: Train the VT-SNN Tactile-only model on Container & Weight Classification
+      description: Train the VT-SNN tactile-only model on Container & Weight Classification
       flags:
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
         network_config: /home/jethro/container_weight.yml
@@ -79,17 +79,31 @@
         task: cw
 
 - model: vtsnn-vis-cw
-  description: VT-SNN Vision-only model on Container & Weight Classification
+  description: VT-SNN vision-only model on Container & Weight Classification
   extends: vtsnn-base
   operations:
     train:
-      description: Train the VT-SNN Tactile-only model on Container & Weight Classification
+      description: Train the VT-SNN vision-only model on Container & Weight Classification
       flags:
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
         network_config: /home/jethro/container_weight.yml
         sample_file: 1
         hidden_size: 32
-        mode: tact
+        mode: vis
+        task: cw
+
+- model: vtsnn-mm-cw
+  description: VT-SNN multi-modal model on Container & Weight Classification
+  extends: vtsnn-base
+  operations:
+    train:
+      description: Train the VT-SNN multi-modal model on Container & Weight Classification
+      flags:
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        network_config: /home/jethro/container_weight.yml
+        sample_file: 1
+        hidden_size: 32
+        mode: mm
         task: cw
 
 - model: rest
