@@ -108,9 +108,6 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "--remove_outlier", type=int, help="removes outliers", required=True
-)
-parser.add_argument(
     "--num_splits",
     type=int,
     help="Number of splits for stratified K-folds.",

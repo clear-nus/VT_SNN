@@ -13,8 +13,7 @@ class ViTacDataset(Dataset):
     def __init__(self, path, sample_file, output_size, rectangular=False):
         self.path = path
         self.output_size = output_size
-        sample_file = Path(path) / sample_file
-        self.samples = np.loadtxt(sample_file).astype("int")
+        self.samples = np.loadtxt(Path(path) / sample_file).astype("int")
 
         self.rectangular = rectangular
         if rectangular:

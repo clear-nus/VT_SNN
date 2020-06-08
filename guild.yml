@@ -1,8 +1,11 @@
 - package: gpkg.vtsnn
   version: 0.1
   data-files:
-    - network_config/*.yml
+    - network_config
 
+- model: data  
+  description: >
+      Model for processing raw data.
 - operations:
     preprocess:
       description: Preprocess raw data for training.
@@ -19,15 +22,64 @@
         n_sample_per_object: 20
         remove_outlier: 0
         slip: 0
-    downsample-vision:
+    downsample:
       description: Downsample vision data with sum pool and save as one file
-      main: vtsnn.downsample_images
+      main: vtsnn.downsample
       flags:
-        path: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        theta: 10
-        tsample: 325
-        tauRho: 1
-        count: 400 # total number of samples
+        path: /home/tasbolat/some_data_examples/data_VT_SNN_new/
+        network_config: /home/jethro/container_weight.yml
+
+- config: vtsnn-base
+  sourcecode:
+    - network_config
+    - vtsnn
+  operations:
+    train:
+      main: vtsnn.train_snn
+      # requires:
+      #   - config
+      flags:
+        epochs: 500
+        lr: 0.001
+        sample_file: 1
+        batch_size: 8
+        loss: NumSpikes
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =loss
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - acc/train as acc_train
+        - loss/test as loss_test
+        - acc/test as acc_test
+        - max acc/test as max_acc_test
+  # resources:
+  #   config:
+  #     description: SNN network config yml files
+  #     path: .
+  #     sources:
+  #         select: "network_config/*.yml"
+    
+- model: vtsnn-tact-cw
+  description: VT-SNN Tactile-only model on Container & Weight Classification
+  extends: vtsnn-base
+  operations:
+    train:
+      description: Train the VT-SNN Tactile-only model on Container & Weight Classification
+      flags:
+        data_dir: /home/tasbolat/some_data_examples/data_VT_SNN_new/
+        network_config: /home/jethro/container_weight.yml
+        sample_file: 1
+        hidden_size: 32
+        mode: tact
+        task: cw
+
+- model: rest
+  operations:
     tact-snn:
       description: Train tactile model using SNN
       main: vtsnn.train_tac_snn

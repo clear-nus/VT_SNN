@@ -10,7 +10,6 @@ import slayerSNN as snn
 from vtsnn.models.snn import SlayerMLP, SlayerMM
 from vtsnn.dataset import ViTacDataset
 
-
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger()
 
@@ -24,23 +23,13 @@ parser.add_argument(
     "--checkpoint_dir",
     type=str,
     help="Path for saving checkpoints.",
-    required=True,
+    default=".",
 )
 parser.add_argument(
     "--network_config",
     type=str,
     help="Path SNN network configuration.",
     required=True,
-)
-parser.add_argument("--tsample", type=int, help="tSample", required=True)
-parser.add_argument(
-    "--tsr_stop", type=int, help="Target Spike Region Stop", required=True
-)
-parser.add_argument(
-    "--sc_true", type=int, help="Spike Count True", required=True
-)
-parser.add_argument(
-    "--sc_false", type=int, help="Spike Count False", required=True
 )
 parser.add_argument("--lr", type=float, help="Learning rate.", required=True)
 parser.add_argument(
@@ -71,9 +60,10 @@ parser.add_argument(
 parser.add_argument("--batch_size", type=int, help="Batch Size.", required=True)
 
 parser.add_argument(
-    "--loss_type",
-    type=int,
-    help="0:numSpikes or 1:weightedNumSpikes",
+    "--loss",
+    type=str,
+    help="Loss function to use.",
+    choices=["NumSpikes", "WeightedNumSpikes"],
     required=True,
 )
 args = parser.parse_args()
@@ -81,7 +71,6 @@ args = parser.parse_args()
 LOSS_TYPES = ["NumSpikes", "WeightedNumSpikes"]
 
 params = snn.params(args.network_config)
-print(params)
 
 if args.task == "cw":
     output_size = 20
@@ -89,6 +78,7 @@ else:  # Slip
     output_size = 2
 
 if args.mode == "tact":
+    model = SlayerMLP
     model_args = {
         "params": params,
         "input_size": 156,
@@ -118,11 +108,14 @@ device = torch.device("cuda")
 writer = SummaryWriter(".")
 net = model(**model_args).to(device)
 
-error = snn.loss(params).to(device)
 
-if args.loss_type == 0:
+if args.loss == "NumSpikes":
+    params["training"]["error"]["type"] = "NumSpikes"
+    error = snn.loss(params).to(device)
     criteria = error.numSpikes
-elif args.loss_type == 1:
+elif args.loss == "WeightedNumSpikes":
+    params["training"]["error"]["type"] = "WeightedNumSpikes"
+    error = snn.loss(params).to(device)
     criteria = error.weightedNumSpikes
 
 optimizer = torch.optim.RMSprop(net.parameters(), lr=args.lr, weight_decay=0.5)

@@ -1,41 +1,27 @@
 import argparse
 import torch
 import numpy as np
-from torch import nn
 from pathlib import Path
 import slayerSNN as snn
 import torch.nn.functional as F
+import glob
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--path", help="Path", required=True)
-parser.add_argument("--count", type=int, help="count", required=True)
-parser.add_argument("--theta", type=float, help="SRM threshold.", required=True)
 parser.add_argument(
-    "--tauRho", type=float, help="spike pdf parameter.", required=True
+    "--path", help="Path to post-processed data.", required=True
 )
-parser.add_argument("--tsample", type=int, help="tSample", required=True)
+parser.add_argument(
+    "--network_config", type=str, help="Configuration to use.", required=True
+)
 
 args = parser.parse_args()
 
-params = {
-    "neuron": {
-        "type": "SRMALPHA",
-        "theta": args.theta,
-        "tauSr": 10.0,
-        "tauRef": 1.0,
-        "scaleRef": 1,
-        "tauRho": args.tauRho,  # pdf
-        "scaleRho": 1,
-    },
-    "simulation": {"Ts": 1.0, "tSample": args.tsample, "nSample": 1},
-}
-
 # define average pooling for vision
-class SumPool(nn.Module):  # outputs spike trains
-    def __init__(self, netParams):
+class SumPool(torch.nn.Module):  # outputs spike trains
+    def __init__(self, params):
         super(SumPool, self).__init__()
-        self.slayer = snn.layer(netParams["neuron"], netParams["simulation"])
+        self.slayer = snn.layer(params["neuron"], params["simulation"])
         self.pool = self.slayer.pool(4)
 
     def forward(self, input_data):
@@ -43,27 +29,30 @@ class SumPool(nn.Module):  # outputs spike trains
         return spike_out
 
 
-class AvgPool(nn.Module):  # outputs continious time signal
+class AvgPool(torch.nn.Module):  # outputs continious time signal
     def __init__(self):
         super(AvgPool, self).__init__()
-        self.pool = nn.AvgPool3d((1, 4, 4), padding=[0, 1, 1], stride=(1, 4, 4))
+        self.pool = torch.nn.AvgPool3d(
+            (1, 4, 4), padding=[0, 1, 1], stride=(1, 4, 4)
+        )
 
     def forward(self, input_data):
         out_data = F.relu(self.pool(input_data))
         return out_data
 
 
-device = torch.device("cuda:1")
+device = torch.device("cuda")
 
-
-net = SumPool(params).to(device)
+net_params = snn.params(args.network_config)
+net = SumPool(net_params).to(device)
 net2 = AvgPool().to(device)
 
 tact_arr = []
 
-print("Starting tactile ...")
+tact_count = len(glob.glob(str(Path(args.path) / "*_tact.npy")))
+print(f"Processing {tact_count} tactile files...")
 
-for i in range(args.count):
+for i in range(tact_count):
     print(f"Processing tactile {i}...")
     # tactile
     tact_npy = Path(args.path) / f"{i}_tact.npy"
@@ -71,20 +60,21 @@ for i in range(args.count):
     tact_arr.append(tact)
 
 tact = torch.stack(tact_arr)
-print(f"tact: {tact.shape}")
 torch.save(tact, Path(args.path) / "tact.pt")
 
+print(f"tact shape: {tact.shape}")
+print("Done processing tactile.")
 del tact
 
 ds_vis_spike_arr = []
 ds_vis_non_spike_arr = []
 
+vis_count = len(glob.glob(str(Path(args.path) / "*_vis.npy")))
+print(f"Processing {vis_count} vision files...")
 
-print("Starting vision ...")
+for i in range(vis_count):
 
-for i in range(args.count):
-
-    print(f"Processing  {i}...")
+    print(f"Processing vision {i}...")
     vis_npy = Path(args.path) / f"{i}_vis.npy"
     vis = torch.FloatTensor(np.load(vis_npy)).unsqueeze(0)
     vis = vis.to(device)
