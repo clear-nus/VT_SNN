@@ -37,7 +37,7 @@ class ViTacDataset(Dataset):
             )
 
         return (
-            (self.tact[input_index]),
+            self.tact[input_index],
             target_class,
             class_label,
         )
@@ -66,7 +66,7 @@ class ViTacVisDataset(Dataset):
         target_class[class_label, ...] = 1
 
         return (
-            (self.vis[input_index]),
+            self.vis[input_index],
             target_class,
             class_label,
         )
@@ -104,18 +104,17 @@ class ViTacMMDataset(Dataset):
         target_class[class_label, ...] = 1
 
         if self.rectangular:
-            return (
-                (
-                    self.right_tact[input_index],
-                    self.left_tact[input_index],
-                    self.ds_vis[input_index],
-                ),
+            return (                
+                self.right_tact[input_index],
+                self.left_tact[input_index],
+                self.ds_vis[input_index],
                 target_class,
                 class_label,
             )
 
         return (
-            (self.tact[input_index], self.ds_vis[input_index]),
+            self.tact[input_index],
+            self.ds_vis[input_index],
             target_class,
             class_label,
         )

@@ -4,16 +4,16 @@ from slayerSNN import loihi as spikeLayer
 
 
 class SlayerMLP(torch.nn.Module):
-    """2-layer MLP based on SLAYER used for tactile data."""
+    """2-layer MLP built using SLAYER's spiking layers."""
 
     def __init__(self, params, input_size, hidden_size, output_size):
         super(SlayerMLP, self).__init__()
-        self.output_size = output_size
         self.slayer = snn.layer(params["neuron"], params["simulation"])
         self.fc1 = self.slayer.dense(input_size, hidden_size)
         self.fc2 = self.slayer.dense(hidden_size, output_size)
 
     def forward(self, spike_input):
+        spike_input = spike_input[0]
         spike_1 = self.slayer.spike(self.slayer.psp(self.fc1(spike_input)))
         spike_output = self.slayer.spike(self.slayer.psp(self.fc2(spike_1)))
         return spike_output

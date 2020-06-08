@@ -71,7 +71,7 @@
     train:
       description: Train the VT-SNN Tactile-only model on Container & Weight Classification
       flags:
-        data_dir: /home/tasbolat/some_data_examples/data_VT_SNN_new/
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
         network_config: /home/jethro/container_weight.yml
         sample_file: 1
         hidden_size: 32

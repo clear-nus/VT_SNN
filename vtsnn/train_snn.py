@@ -104,6 +104,8 @@ else:  # NOTE: args.hidden_size unused here
         "output_size": output_size,
     }
 
+print(model_args)
+
 device = torch.device("cuda")
 writer = SummaryWriter(".")
 net = model(**model_args).to(device)
@@ -148,7 +150,7 @@ def _train():
     correct = 0
     num_samples = 0
     net.train()
-    for (data, target, label) in train_loader:
+    for *data, target, label in train_loader:
         data = [d.to(device) for d in data]
         target = target.to(device)
         output = net.forward(data)
@@ -169,7 +171,7 @@ def _test():
     num_samples = 0
     net.eval()
     with torch.no_grad():
-        for (data, target, label) in enumerate(test_loader):
+        for *data, target, label in test_loader:
             data = [d.to(device) for d in data]
             target = target.to(device)
             output = net.forward(data)
