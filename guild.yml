@@ -37,11 +37,9 @@
         - file: network_config
 
 - config: vtsnn-base
-  sourcecode:
-    - network_config
-    - vtsnn
   operations:
-    train:
+    train-cw:
+      description: Train the {{desc}} on Container & Weight Classification
       main: vtsnn.train_snn
       requires:
         - config
@@ -50,7 +48,41 @@
         lr: 0.001
         sample_file: 1
         batch_size: 8
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        network_config: network_config/container_weight.yml
+        hidden_size: 32
         loss: NumSpikes
+        mode: '{{mode}}'
+        task: cw
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =loss
+        - loss/train as loss_train        
+        - loss/test as loss_test
+        - acc/train as acc_train        
+        - acc/test as acc_test
+        - max acc/train as max_acc_train
+        - max acc/test as max_acc_test
+    train-sd:
+      description: Train the {{desc}} on Slip Detection
+      main: vtsnn.train_snn
+      requires:
+        - config
+      flags:
+        epochs: 500
+        lr: 0.001
+        sample_file: 1
+        batch_size: 8
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        network_config: network_config/slip_detection.yml
+        hidden_size: 32
+        loss: NumSpikes
+        mode: '{{mode}}'
+        task: slip
       compare:
         - =batch_size
         - =epochs
@@ -70,16 +102,20 @@
       sources:
         - file: network_config
 
-- config: vtmlp-base
+- config: mlp-gru-base
   operations:
-    train:
+    train-cw:
+      description: Train the {{desc}} on Container & Weight Classification
       main: vtsnn.train_mlp
       flags:
         epochs: 500
         lr: 0.0001
         sample_file: 1
         batch_size: 8
-        loss: NumSpikes
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        hidden_size: 32
+        mode: '{{mode}}'
+        task: cw
       compare:
         - =batch_size
         - =epochs
@@ -87,97 +123,75 @@
         - =sample_file
         - =hidden_size
         - =loss
-        - loss/train as loss_train
+        - loss/train as loss_train        
         - loss/test as loss_test
-        - acc/train as acc_train
+        - acc/train as acc_train        
         - acc/test as acc_test
         - max acc/train as max_acc_train
         - max acc/test as max_acc_test
-    
-- model: vtsnn-tact-cw
-  description: VT-SNN tactile-only model on Container & Weight Classification
-  extends: vtsnn-base
-  operations:
-    train:
-      description: Train the VT-SNN tactile-only model on Container & Weight Classification
+    train-sd:
+      description: Train the {{desc}} on Slip Detection
+      main: vtsnn.train_mlp
       flags:
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        network_config: network_config/container_weight.yml
+        epochs: 500
+        lr: 0.0001
         sample_file: 1
-        hidden_size: 32
-        mode: tact
-        task: cw
-
-- model: vtsnn-vis-cw
-  description: VT-SNN vision-only model on Container & Weight Classification
-  extends: vtsnn-base
-  operations:
-    train:
-      description: Train the VT-SNN vision-only model on Container & Weight Classification
-      flags:
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        network_config: network_config/container_weight.yml
-        sample_file: 1
-        hidden_size: 32
-        mode: vis
-        task: cw
-
-- model: vtsnn-mm-cw
-  description: VT-SNN multi-modal model on Container & Weight Classification
-  extends: vtsnn-base
-  operations:
-    train:
-      description: Train the VT-SNN multi-modal model on Container & Weight Classification
-      flags:
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        network_config: network_config/container_weight.yml
-        sample_file: 1
-        hidden_size: 32
-        mode: mm
-        task: cw
-
-- model: vtsnn-tact-sd
-  description: VT-SNN tactile-only model on Slip Detection
-  extends: vtsnn-base
-  operations:
-    train:
-      description: Train the VT-SNN tactile-only model on Slip Detection
-      flags:
+        batch_size: 8
         data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
-        network_config: network_config/slip_detection.yml
-        sample_file: 1
         hidden_size: 32
-        mode: tact
+        mode: '{{mode}}'
         task: slip
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =loss
+        - loss/train as loss_train        
+        - loss/test as loss_test
+        - acc/train as acc_train        
+        - acc/test as acc_test
+        - max acc/train as max_acc_train
+        - max acc/test as max_acc_test
 
-- model: vtsnn-vis-sd
-  description: VT-SNN vision-only model on Slip Detection
+- model: vtsnn-tact
   extends: vtsnn-base
-  operations:
-    train:
-      description: Train the VT-SNN vision-only model on Slip Detection
-      flags:
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
-        network_config: network_config/slip_detection.yml
-        sample_file: 1
-        hidden_size: 32
-        mode: vis
-        task: slip
+  params:
+    desc: VT-SNN tactile-only model
+    mode: tact
 
-- model: vtsnn-mm-sd
-  description: VT-SNN multi-modal model on Slip Detection
+- model: vtsnn-vis
   extends: vtsnn-base
-  operations:
-    train:
-      description: Train the VT-SNN multi-modal model on Slip Detection
-      flags:
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
-        network_config: network_config/slip_detection.yml
-        sample_file: 1
-        hidden_size: 32
-        mode: mm
-        task: slip
+  params:
+    desc: VT-SNN vision-only model
+    mode: vis
 
+- model: vtsnn-mm
+  extends: vtsnn-base
+  params:
+    desc: VT-SNN multi-modal model 
+    mode: mm
+
+- model: mlp-gru-tact
+  extends: mlp-gru-base
+  params:
+    desc: MLP-GRU tactile-only model
+    mode: tact
+
+- model: mlp-gru-vis
+  extends: mlp-gru-base
+  params:
+    desc: MLP-GRU vision-only model
+    mode: vis
+
+- model: mlp-gru-mm
+  extends: mlp-gru-base
+  params:
+    desc: MLP-GRU multi-modal model
+    mode: mm
+
+  
 - model: rest
   operations:
     benchmark:

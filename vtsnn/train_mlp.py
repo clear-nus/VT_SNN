@@ -18,11 +18,11 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger()
 
 
-parser = argparse.ArgumentParser("Train model.")
+parser = argparse.ArgumentParser("Train MLP-GRU model.")
 parser.add_argument("--epochs", type=int, help="Number of epochs.", required=True)
 parser.add_argument("--data_dir", type=str, help="Path to data.", required=True)
 parser.add_argument(
-    "--checkpoint_dir", type=str, help="Path for saving checkpoints.", required=True
+    "--checkpoint_dir", type=str, help="Path for saving checkpoints.", default="."
 )
 parser.add_argument("--lr", type=float, help="Learning rate.", required=True)
 parser.add_argument(
@@ -63,10 +63,11 @@ else:  # NOTE: args.hidden_size unused here
     model = MultiMlpGru
     
 
-train_dataset = ViTacVisDataset(
+train_dataset = ViTacDataset(
     path=args.data_dir,
     sample_file=f"train_80_20_{args.sample_file}.txt",
     output_size=output_size,
+    mode=args.mode,
     spiking=False,
     rectangular=False,
 )
@@ -75,11 +76,12 @@ train_loader = DataLoader(
     dataset=train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8
 )
 
-test_dataset = ViTacVisDataset(
+test_dataset = ViTacDataset(
     path=args.data_dir,
     sample_file=f"test_80_20_{args.sample_file}.txt",
     output_size=output_size,
-    spike=False,
+    mode=args.mode,
+    spiking=False,
     rectangular=False
 )
 test_loader = DataLoader(
@@ -90,7 +92,7 @@ test_loader = DataLoader(
 device = torch.device("cuda")
 writer = SummaryWriter(".")
 
-net = model(output_size).to(device)
+net = model(args.hidden_size, output_size).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.RMSprop(net.parameters(), lr=args.lr)
 
@@ -137,7 +139,7 @@ def _test(epoch):
             output = net.forward(*inputs)            
             _, predicted = torch.max(output.data, 1)
             correct += (predicted == label).sum().item()
-            loss = criterion(out_vis, label)
+            loss = criterion(output, label)
             batch_loss += loss.cpu().data.item()
 
     test_acc = correct / len(test_loader.dataset)
