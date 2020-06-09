@@ -25,9 +25,16 @@
     downsample:
       description: Downsample vision data with sum pool and save as one file
       main: vtsnn.downsample
+      requires:
+        - config
       flags:
         path: /home/tasbolat/some_data_examples/data_VT_SNN_new/
         network_config: /home/jethro/container_weight.yml
+  resources:
+    config:
+      description: SNN network config yml files
+      sources:
+        - file: network_config
 
 - config: vtsnn-base
   sourcecode:
@@ -62,6 +69,30 @@
       description: SNN network config yml files
       sources:
         - file: network_config
+
+- config: vtmlp-base
+  operations:
+    train:
+      main: vtsnn.train_mlp
+      flags:
+        epochs: 500
+        lr: 0.0001
+        sample_file: 1
+        batch_size: 8
+        loss: NumSpikes
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =loss
+        - loss/train as loss_train
+        - loss/test as loss_test
+        - acc/train as acc_train
+        - acc/test as acc_test
+        - max acc/train as max_acc_train
+        - max acc/test as max_acc_test
     
 - model: vtsnn-tact-cw
   description: VT-SNN tactile-only model on Container & Weight Classification
@@ -105,189 +136,50 @@
         mode: mm
         task: cw
 
+- model: vtsnn-tact-sd
+  description: VT-SNN tactile-only model on Slip Detection
+  extends: vtsnn-base
+  operations:
+    train:
+      description: Train the VT-SNN tactile-only model on Slip Detection
+      flags:
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        network_config: network_config/slip_detection.yml
+        sample_file: 1
+        hidden_size: 32
+        mode: tact
+        task: slip
+
+- model: vtsnn-vis-sd
+  description: VT-SNN vision-only model on Slip Detection
+  extends: vtsnn-base
+  operations:
+    train:
+      description: Train the VT-SNN vision-only model on Slip Detection
+      flags:
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        network_config: network_config/slip_detection.yml
+        sample_file: 1
+        hidden_size: 32
+        mode: vis
+        task: slip
+
+- model: vtsnn-mm-sd
+  description: VT-SNN multi-modal model on Slip Detection
+  extends: vtsnn-base
+  operations:
+    train:
+      description: Train the VT-SNN multi-modal model on Slip Detection
+      flags:
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        network_config: network_config/slip_detection.yml
+        sample_file: 1
+        hidden_size: 32
+        mode: mm
+        task: slip
+
 - model: rest
   operations:
-    tact-snn:
-      description: Train tactile model using SNN
-      main: vtsnn.train_tac_snn
-      output-scalars: no
-      objective:
-        maximize: acc/test
-      flags-import:
-        - batch_size
-        - epochs
-        - tsample
-        - tsr_stop
-        - sc_true
-        - sc_false
-        - lr
-        - theta
-        - tauRho
-        - sample_file
-        - hidden_size
-        - output_size
-        - checkpoint_dir
-        - loss_type
-      flags:
-        batch_size: 8
-        epochs: 500
-        lr: 0.001
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        tsample: 325
-        tauRho: 1
-        tsr_stop: 325
-        sc_true: 150
-        sc_false: 5
-        theta: 10
-        sample_file: 1
-        hidden_size: 32
-        checkpoint_dir: . 
-        output_size: 20
-        loss_type: 0
-      compare:
-        - =batch_size
-        - =epochs
-        - =tsample
-        - =tsr_stop
-        - =sc_true
-        - =sc_false
-        - =lr
-        - =theta
-        - =tauRho
-        - =sample_file
-        - =hidden_size
-        - =loss_type
-        - =output_size
-        - loss/train as loss_train
-        - loss/test as loss_test
-        - max acc/train as max_acc_train        
-        - max acc/test as max_acc_test
-        - acc/test as acc_test
-        - acc/train as acc_train
-    vis-snn:
-      description: Train vizual model
-      main: vtsnn.train_vis_snn
-      output-scalars: no
-      objective:
-        maximize: acc/test
-      flags-import:
-        - batch_size
-        - epochs
-        - tsample
-        - tsr_start
-        - tsr_stop
-        - sc_true
-        - sc_false
-        - hidden_size
-        - lr
-        - sample_file
-        - output_size
-        - checkpoint_dir
-        - theta
-        - tauRho
-        - loss_type
-      flags:
-        batch_size: 8
-        epochs: 500
-        lr: 0.001
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        tsample: 325
-        tsr_start: 0
-        tsr_stop: 325
-        sc_true: 150
-        sc_false: 5
-        sample_file: 1
-        output_size: 20
-        theta: 10
-        tauRho: 1
-        hidden_size: 32
-        checkpoint_dir: .
-        loss_type: 0
-      compare:
-        - =batch_size
-        - =epochs
-        - =tsample
-        - =tsr_stop
-        - =sc_true
-        - =sc_false
-        - =lr
-        - =sample_file
-        - =hidden_size
-        - =theta
-        - =tauRho
-        - =loss_type
-        - loss/train as loss_train
-        - max acc/train as max_acc_train
-        - acc/train as acc_train
-        - loss/test as loss_test
-        - acc/test as acc_test
-        - max acc/test as max_acc_test
-    mm-snn:
-      description: Train MM model
-      main: vtsnn.train_mm_snn
-      output-scalars: no
-      objective:
-        maximize: acc/test
-      flags-import:
-        - batch_size
-        - epochs
-        - tsample
-        - tsr_start
-        - tsr_stop
-        - sc_true
-        - sc_false
-        - lr
-        - sample_file
-        - theta
-        - tauRho
-        - output_size
-        - loss_type
-      flags:
-        batch_size:
-          default: 8
-        epochs:
-          default: 500
-        lr:
-          default: 0.001
-        data_dir:
-          default: /home/tasbolat/some_python_examples/data_VT_SNN_new
-        tsample:
-          default: 325
-        tsr_start:
-          default: 0
-        tsr_stop:
-          default: 325
-        sc_true:
-          default: 150
-        sc_false:
-          default: 5
-        sample_file:
-          default: 1        
-        output_size:
-          default: 20
-        checkpoint_dir: .
-        theta: 10
-        tauRho: 1
-        loss_type: 0
-      compare:
-        - =batch_size
-        - =prob
-        - =epochs
-        - =tsample
-        - =tsr_stop
-        - =sc_true
-        - =sc_false
-        - =lr
-        - =sample_file
-        - =theta
-        - =tauRho
-        - =loss_type
-        - loss/train as loss_train
-        - max acc/train as max_acc_train
-        - loss/test as loss_test
-        - acc/test as acc_test
-        - acc/train as acc_train
-        - max acc/test as max_acc_test
     benchmark:
       description: Run benchmarks on trained model
       main: vtsnn.run_benchmark
@@ -301,113 +193,6 @@
         sample_file: 1
         network_config: /home/jethro/network_config/slip.yml
         saved_weights: /home/jethro/.pyenv/versions/miniconda3-4.3.30/.guild/runs/3d77e9ed1e4c4a8a9d3f67582d3aa391/weights-600-2.360.pt
-    tact-ann:
-      description: Train tactile model using ANN (MLP-GRU)
-      main: vtsnn.train_tac_ann
-      output-scalars: no
-      objective:
-        maximize: acc/test
-      flags-import:
-        - batch_size
-        - epochs
-        - lr
-        - sample_file
-        - hidden_size
-        - output_size
-        - checkpoint_dir
-      flags:
-        batch_size: 8
-        epochs: 600
-        lr: 0.0001
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        sample_file: 1
-        hidden_size: 32
-        checkpoint_dir: . #/home/tasbolat/some_python_examples/VT_SNN/logged_models/
-      compare:
-        - =batch_size
-        - =epochs
-        - =lr
-        - =sample_file
-        - =hidden_size
-        - loss/train as loss_train
-        - max acc/train as max_acc_train
-        - loss/test as loss_test
-        - max acc/test as max_acc_test
-        - acc/test as acc_test
-        - acc/train as acc_train
-    vis-ann:
-      description: Train vision model using ANN (MLP-GRU)
-      main: vtsnn.train_vis_ann
-      output-scalars: no
-      objective:
-        maximize: acc/test
-      flags-import:
-        - batch_size
-        - epochs
-        - lr
-        - sample_file
-        - hidden_size
-        - output_size
-        - checkpoint_dir
-        - output_size
-      flags:
-        batch_size: 8
-        epochs: 400
-        lr: 0.0001
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        sample_file: 1
-        hidden_size: 32
-        checkpoint_dir: .
-        output_size: 20
-      compare:
-        - =batch_size
-        - =epochs
-        - =lr
-        - =sample_file
-        - =hidden_size
-        - =output_size
-        - loss/train as loss_train
-        - max acc/train as max_acc_train
-        - loss/test as loss_test
-        - max acc/test as max_acc_test
-        - acc/test as acc_test
-        - acc/train as acc_train
-    mm-ann:
-      description: Train multimodal model using ANN (MLP-GRU)
-      main: vtsnn.train_mm_ann
-      output-scalars: no
-      objective:
-        maximize: acc/test
-      flags-import:
-        - batch_size
-        - epochs
-        - lr
-        - sample_file
-        - hidden_size
-        - output_size
-        - checkpoint_dir
-      flags:
-        batch_size: 8
-        epochs: 400
-        lr: 0.0001
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
-        sample_file: 1
-        hidden_size: 32
-        output_size: 20
-        checkpoint_dir: . 
-      compare:
-        - =batch_size
-        - =epochs
-        - =lr
-        - =sample_file
-        - =hidden_size
-        - =output_size
-        - loss/train as loss_train
-        - max acc/train as max_acc_train
-        - loss/test as loss_test
-        - max acc/test as max_acc_test
-        - acc/test as acc_test
-        - acc/train as acc_train
     tact-cnn3d:
       description: Train tactile model usin CNN3D
       main: vtsnn.cnn.train_tac_cnn
