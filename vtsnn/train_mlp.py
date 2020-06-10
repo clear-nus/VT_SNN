@@ -19,14 +19,22 @@ log = logging.getLogger()
 
 
 parser = argparse.ArgumentParser("Train MLP-GRU model.")
-parser.add_argument("--epochs", type=int, help="Number of epochs.", required=True)
+parser.add_argument(
+    "--epochs", type=int, help="Number of epochs.", required=True
+)
 parser.add_argument("--data_dir", type=str, help="Path to data.", required=True)
 parser.add_argument(
-    "--checkpoint_dir", type=str, help="Path for saving checkpoints.", default="."
+    "--checkpoint_dir",
+    type=str,
+    help="Path for saving checkpoints.",
+    default=".",
 )
 parser.add_argument("--lr", type=float, help="Learning rate.", required=True)
 parser.add_argument(
-    "--sample_file", type=int, help="Sample number to train from.", required=True
+    "--sample_file",
+    type=int,
+    help="Sample number to train from.",
+    required=True,
 )
 parser.add_argument(
     "--hidden_size", type=int, help="Size of hidden layer.", required=True
@@ -61,7 +69,7 @@ elif args.mode == "vis":
     model = VisMlpGru
 else:  # NOTE: args.hidden_size unused here
     model = MultiMlpGru
-    
+
 
 train_dataset = ViTacDataset(
     path=args.data_dir,
@@ -73,7 +81,10 @@ train_dataset = ViTacDataset(
 )
 
 train_loader = DataLoader(
-    dataset=train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8
+    dataset=train_dataset,
+    batch_size=args.batch_size,
+    shuffle=False,
+    num_workers=8,
 )
 
 test_dataset = ViTacDataset(
@@ -82,10 +93,13 @@ test_dataset = ViTacDataset(
     output_size=output_size,
     mode=args.mode,
     spiking=False,
-    rectangular=False
+    rectangular=False,
 )
 test_loader = DataLoader(
-    dataset=test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8
+    dataset=test_dataset,
+    batch_size=args.batch_size,
+    shuffle=False,
+    num_workers=8,
 )
 
 
@@ -123,7 +137,9 @@ def _train(epoch):
         correct += (predicted == label).sum().item()
 
     train_acc = correct / len(train_loader.dataset)
-    writer.add_scalar("loss/train", batch_loss / len(train_loader.dataset), epoch)
+    writer.add_scalar(
+        "loss/train", batch_loss / len(train_loader.dataset), epoch
+    )
     writer.add_scalar("acc/train", train_acc, epoch)
 
 
@@ -133,10 +149,10 @@ def _test(epoch):
     batch_loss = 0
     test_acc = 0
     with torch.no_grad():
-        for *inputs , _, label in test_loader:
+        for *inputs, _, label in test_loader:
             inputs = [i.to(device) for i in inputs]
             label = label.to(device)
-            output = net.forward(*inputs)            
+            output = net.forward(*inputs)
             _, predicted = torch.max(output.data, 1)
             correct += (predicted == label).sum().item()
             loss = criterion(output, label)
@@ -153,5 +169,3 @@ for epoch in range(1, args.epochs + 1):
         _test(epoch)
     if epoch % 100 == 0:
         _save_model(epoch)
-
-
