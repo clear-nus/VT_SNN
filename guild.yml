@@ -10,6 +10,8 @@
     preprocess:
       description: Preprocess raw data for training.
       main: vtsnn.preprocess
+      requires:
+        - config
       flags:
         save_path: /home/jethro/data_VTSNN_test/
         data_path: /datasets/eventdata/batch2/
@@ -17,6 +19,7 @@
         selection: grasp_lift_hold
         bin_duration: 0.02
         n_sample_per_object: 20
+        network_config: network_config/container_weight.yml
         slip: 0
     downsample:
       description: Downsample vision data with sum pool and save as one file
