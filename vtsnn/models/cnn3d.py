@@ -83,7 +83,7 @@ class VisCNN3D(nn.Module):
         )
 
         # Define the output layer
-        self.fc = nn.Linear(np.prod([8, 26, 6, 5]), output_size)
+        self.fc = nn.Linear(np.prod([8, 6, 6, 5]), output_size)
 
     def forward(self, x):
         batch_size, C, H, W, sequence_size = x.size()
@@ -94,7 +94,7 @@ class VisCNN3D(nn.Module):
         out = F.relu(out)
         out = self.conv3(out)
         out = F.relu(out)
-        out = out.view([batch_size, np.prod([8, 26, 6, 5])])
+        out = out.view([batch_size, np.prod([8, 6, 6, 5])])
         out = self.fc(out)
         # out = self.drop(out)
 
