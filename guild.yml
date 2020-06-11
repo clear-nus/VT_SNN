@@ -12,15 +12,11 @@
       main: vtsnn.preprocess
       flags:
         save_path: /home/jethro/data_VTSNN_test/
-        tactile_path: /datasets/eventdata/batch2/aces_recordings/
-        video_path: /datasets/eventdata/batch2/prophesee_recordings/
-        trajectory_path: /datasets/eventdata/batch2/traj_start_ends/
+        data_path: /datasets/eventdata/batch2/
         threshold: 1
         selection: grasp_lift_hold
-        modes: vitac
         bin_duration: 0.02
         n_sample_per_object: 20
-        remove_outlier: 0
         slip: 0
     downsample:
       description: Downsample vision data with sum pool and save as one file

@@ -5,19 +5,15 @@ Usage (from root directory):
 1. With guild:
 
 guild run preprocess save_path=/path/to/save \
-  tactile_path=/path/to/tact/ \
-  video_path=/path/to/video/ \
-  trajectory_path=/path/to/traj
+  data_path=/path/to/data \
 
 2. With plain Python:
 
 python vtsnn/preprocess.py \
   --save_path /path/to/save \
-  --video_path /path/to/video \
-  --trajectory_path /path/to/traj \
+  --data_path /path/to/data \
   --threshold 1 \
   --selection grasp_lift_hold \
-  --modes vitac \
   --bin_duration 0.02 \
   --n_sample_per_object 20 \
   --slip 0
@@ -54,23 +50,13 @@ selections = {  # index, offset, length
 }
 
 
-class Modes:
-    TACT, VIS = range(2)
-
-
 parser = argparse.ArgumentParser(description="VT-SNN data preprocessor.")
 
 parser.add_argument(
     "--save_path", type=str, help="Location to save data to.", required=True
 )
 parser.add_argument(
-    "--tactile_path", type=str, help="Path to tactile dataset.", required=True
-)
-parser.add_argument(
-    "--video_path", type=str, help="Path to video dataset.", required=True
-)
-parser.add_argument(
-    "--trajectory_path", type=str, help="Path to trajectories.", required=True
+    "--data_path", type=str, help="Path to dataset.", required=True
 )
 parser.add_argument("--blacklist_path", type=str, help="Path to blacklist.")
 parser.add_argument(
@@ -100,14 +86,6 @@ parser.add_argument(
     "--bin_duration", type=float, help="Binning duration.", required=True
 )
 parser.add_argument(
-    "--modes",
-    type=str,
-    choices=["tac", "vi", "vitac"],
-    help="What files to parse.",
-    default="vitac",
-    required=True,
-)
-parser.add_argument(
     "--num_splits",
     type=int,
     help="Number of splits for stratified K-folds.",
@@ -116,23 +94,10 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-# TODO: remove
-# THIS READ TACTILE CODE for new sensors
-# def read_tactile_file(tactile_path, obj_name):
-#     """Reads a tactile file from path. Returns a pandas dataframe."""
-#     obj_path = Path(tactile_path) / f"{obj_name}.tact"
-#     df = pd.read_csv(
-#         obj_path,
-#         delimiter=" ",
-#         names=["polarity", "cell_index", "timestamp"],
-#         dtype={'polarity': int, 'cell_index': int, 'timestamp': float}
-#     )
-#     return df
 
-
-def read_tactile_file(tactile_path, obj_name):
+def read_tactile_file(data_path, obj_name):
     """Reads a tactile file from path. Returns a pandas dataframe."""
-    obj_path = Path(tactile_path) / f"{obj_name}.tact"
+    obj_path = Path(data_path) / "aces_recordings" / f"{obj_name}.tact"
     df = pd.read_csv(
         obj_path,
         delimiter=" ",
@@ -144,9 +109,9 @@ def read_tactile_file(tactile_path, obj_name):
     return df
 
 
-def read_trajectory(trajectory_path, obj_name, start_time=None, zeroed=False):
+def read_trajectory(data_path, obj_name, start_time=None, zeroed=False):
     """Reads the trajectory from path, Returns a Trajectory."""
-    obj_path = Path(trajectory_path) / f"{obj_name}.startend"
+    obj_path = Path(data_path) / "traj_start_ends" / f"{obj_name}.startend"
     with open(obj_path, "r") as f:
         timings = list(map(float, f.read().split(" ")))
         if start_time is not None:
@@ -162,8 +127,8 @@ class TactileData:
     def __init__(self, obj_name, selection):
         assert selection in selections
         self.obj_name = obj_name
-        self.trajectory = read_trajectory(args.trajectory_path, obj_name)
-        self.df = read_tactile_file(args.tactile_path, obj_name)
+        self.trajectory = read_trajectory(args.data_path, obj_name)
+        self.df = read_tactile_file(args.data_path, obj_name)
 
         traj_start, offset, self.T = selections[selection]
         self.start_t = self.trajectory[traj_start] + offset
@@ -230,17 +195,19 @@ class CameraData:
         x0 = 180
         y0 = 0
 
-        file_path = args.video_path + obj_name  # + ".start" # _td.mat
-        start_time = float(open(file_path + ".start", "r").read())
+        file_path = (
+            Path(args.data_path) / "prophesee_recordings" / f"{obj_name}"
+        )
+        start_time = float(open(str(file_path) + ".start", "r").read())
 
         self.trajectory = read_trajectory(
-            args.trajectory_path, obj_name, start_time=start_time, zeroed=True
+            args.data_path, obj_name, start_time=start_time, zeroed=True
         )
 
         traj_start, offset, self.T = selections[selection]
         self.start_t = self.trajectory[traj_start] + offset
 
-        td_data = loadmat(file_path + "_td.mat")["td_data"]
+        td_data = loadmat(str(file_path) + "_td.mat")["td_data"]
         df = pd.DataFrame(columns=["x", "y", "polarity", "timestamp"])
         a = td_data["x"][0][0]
         b = td_data["y"][0][0]
@@ -344,7 +311,7 @@ class ViTacData:
         self.save_dir = save_dir
         self.selection = selection
 
-    def binarize_save(self, bin_duration, modes=[Modes.TACT, Modes.VIS]):
+    def binarize_save(self, bin_duration):
         "saves binned tactile and prophesee data"
         overall_count = 0
         big_list_tact = []
@@ -352,38 +319,30 @@ class ViTacData:
         for obj in self.list_of_objects:
             for i in range(1, self.iters + 1):
                 file_name = f"{obj}_{i:02}"
-                if Modes.TACT in modes:
-                    big_list_tact.append(
-                        [
-                            file_name,
-                            overall_count,
-                            bin_duration,
-                            self.selection,
-                            self.save_dir,
-                        ]
-                    )
-                if Modes.VIS in modes:
-                    big_list_vis.append(
-                        [
-                            file_name,
-                            overall_count,
-                            bin_duration,
-                            self.selection,
-                            self.save_dir,
-                        ]
-                    )
+                big_list_tact.append(
+                    [
+                        file_name,
+                        overall_count,
+                        bin_duration,
+                        self.selection,
+                        self.save_dir,
+                    ]
+                )
+                big_list_vis.append(
+                    [
+                        file_name,
+                        overall_count,
+                        bin_duration,
+                        self.selection,
+                        self.save_dir,
+                    ]
+                )
                 overall_count += 1
-        if Modes.TACT in modes:
-            Parallel(n_jobs=18)(
-                delayed(tact_bin_save)(*zz) for zz in big_list_tact
-            )
-        if Modes.VIS in modes:
-            Parallel(n_jobs=18)(
-                delayed(vis_bin_save)(*zz) for zz in big_list_vis
-            )
+
+        Parallel(n_jobs=18)(delayed(tact_bin_save)(*zz) for zz in big_list_tact)
+        Parallel(n_jobs=18)(delayed(vis_bin_save)(*zz) for zz in big_list_vis)
 
 
-# batch2
 if args.slip == 0:
     list_of_objects2 = [
         "107-a_pepsi_bottle",
@@ -414,17 +373,7 @@ ViTac = ViTacData(
     Path(args.save_path), list_of_objects2, selection=args.selection
 )
 
-modes = []
-
-if args.modes == "vi":
-    modes.append(Modes.VIS)
-elif args.modes == "tac":
-    modes.append(Modes.TACT)
-elif args.modes == "vitac":
-    modes.append(Modes.TACT)
-    modes.append(Modes.VIS)
-
-ViTac.binarize_save(bin_duration=args.bin_duration, modes=modes)
+ViTac.binarize_save(bin_duration=args.bin_duration)
 
 
 # create labels
