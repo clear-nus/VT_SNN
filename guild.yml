@@ -31,8 +31,8 @@
         data_path: /datasets/eventdata/slip2/
         threshold: 1
         selection: full
-        bin_duration: 0.02
-        n_sample_per_object: 20
+        bin_duration: 0.001
+        n_sample_per_object: 50
         network_config: network_config/slip_detection.yml
         task: slip
     
