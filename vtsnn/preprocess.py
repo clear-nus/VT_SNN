@@ -40,23 +40,6 @@ from pathlib import Path
 
 from collections import namedtuple
 
-Trajectory = namedtuple(
-    "Trajectory",
-    ["start", "reaching", "reached", "grasping", "lifting", "holding"],
-)
-
-selections = {  # index, offset, length
-    "full": [1, 0.0, 8.5],
-    "reaching": [1, 0.0, 2.0],
-    "grasp": [3, 0.0, 4.0],
-    "lift": [4, 0.0, 0.75],
-    "hold": [4, 2.0, 1.25],
-    "lift_hold": [4, 0.0, 2.0],
-    "grasp_lift": [3, 0.0, 4.75],
-    "grasp_lift_hold": [3, 0.0, 6.5],
-}
-
-
 parser = argparse.ArgumentParser(description="VT-SNN data preprocessor.")
 
 parser.add_argument(
@@ -79,9 +62,10 @@ parser.add_argument(
     "--network_config", type=str, help="Configuration to use.", required=True
 )
 parser.add_argument(
-    "--slip",
-    type=int,
-    help="is this data preprocessing for slip?.",
+    "--task",
+    type=str,
+    help="Task to preprocess for.",
+    choices=["cw", "slip"],
     required=True,
 )
 parser.add_argument("--seed", type=int, help="Random seed to use", default=100)
@@ -103,6 +87,31 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+
+selections_cw = {  # index, offset, length
+    "full": [1, 0.0, 8.5],
+    "reaching": [1, 0.0, 2.0],
+    "grasp": [3, 0.0, 4.0],
+    "lift": [4, 0.0, 0.75],
+    "hold": [4, 2.0, 1.25],
+    "lift_hold": [4, 0.0, 2.0],
+    "grasp_lift": [3, 0.0, 4.75],
+    "grasp_lift_hold": [3, 0.0, 6.5],
+}
+
+selections_slip = {"full": [1, 0.0, 0.15]}
+
+if args.task == "cw":
+    SELECTION = selections_cw[args.selection]
+    Trajectory = namedtuple(
+        "Trajectory",
+        ["start", "reaching", "reached", "grasping", "lifting", "holding"],
+    )
+elif args.task == "slip":
+    SELECTION = selections_slip[args.selection]
+    Trajectory = namedtuple(
+        "Trajectory", ["start", "reaching", "reached", "grasping"],
+    )
 
 
 def read_tactile_file(data_path, obj_name):
@@ -135,12 +144,11 @@ def read_trajectory(data_path, obj_name, start_time=None, zeroed=False):
 
 class TactileData:
     def __init__(self, obj_name, selection):
-        assert selection in selections
         self.obj_name = obj_name
         self.trajectory = read_trajectory(args.data_path, obj_name)
         self.df = read_tactile_file(args.data_path, obj_name)
 
-        traj_start, offset, self.T = selections[selection]
+        traj_start, offset, self.T = selection
         self.start_t = self.trajectory[traj_start] + offset
         self.threshold = 1
 
@@ -197,7 +205,7 @@ class TactileData:
 
 
 class CameraData:
-    def __init__(self, obj_name, selection="full"):
+    def __init__(self, obj_name, selection):
         # propophesee hyperparameters
         self.c = 2
         self.w = 200
@@ -214,7 +222,7 @@ class CameraData:
             args.data_path, obj_name, start_time=start_time, zeroed=True
         )
 
-        traj_start, offset, self.T = selections[selection]
+        traj_start, offset, self.T = selection
         self.start_t = self.trajectory[traj_start] + offset
 
         td_data = loadmat(str(file_path) + "_td.mat")["td_data"]
@@ -353,7 +361,7 @@ class ViTacData:
         Parallel(n_jobs=18)(delayed(vis_bin_save)(*zz) for zz in big_list_vis)
 
 
-if args.slip == 0:
+if args.task == "cw":
     list_of_objects2 = [
         "107-a_pepsi_bottle",
         "107-b_pepsi_bottle",
@@ -376,12 +384,10 @@ if args.slip == 0:
         "110-d_coffee_can",
         "110-e_coffee_can",
     ]
-elif args.slip == 1:
+elif args.task == "slip":
     list_of_objects2 = ["stable", "rotate"]
 
-ViTac = ViTacData(
-    Path(args.save_path), list_of_objects2, selection=args.selection
-)
+ViTac = ViTacData(Path(args.save_path), list_of_objects2, selection=SELECTION)
 
 ViTac.binarize_save(bin_duration=args.bin_duration)
 

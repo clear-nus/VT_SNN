@@ -7,8 +7,8 @@
   description: >
       Model for processing raw data.
 - operations:
-    preprocess:
-      description: Preprocess raw data for training.
+    preprocess-cw:
+      description: Preprocess raw data for Container & Weight Classification.
       main: vtsnn.preprocess
       requires:
         - config
@@ -20,20 +20,22 @@
         bin_duration: 0.02
         n_sample_per_object: 20
         network_config: network_config/container_weight.yml
-        slip: 0
-    downsample:
-      description: Downsample vision data with sum pool and save as one file
-      main: vtsnn.downsample
+        task: cw
+    preprocess-slip:
+      description: Preprocess raw data for Slip Detection.
+      main: vtsnn.preprocess
       requires:
         - config
       flags:
-        path: /home/tasbolat/some_data_examples/data_VT_SNN_new/
-        network_config: /home/jethro/container_weight.yml
-    make-tactile-rectangular:
-      description: Converts tactile data into rectangular shape
-      main: vtsnn.cnn.tactile_rectangular_shape
-      flags:
-        path: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        save_path: /home/jethro/data_VTSNN_test/slip_data
+        data_path: /datasets/eventdata/slip2/
+        threshold: 1
+        selection: full
+        bin_duration: 0.02
+        n_sample_per_object: 20
+        network_config: network_config/slip_detection.yml
+        task: slip
+    
   resources:
     config:
       description: SNN network config yml files
