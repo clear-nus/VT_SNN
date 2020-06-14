@@ -1,4 +1,24 @@
-"""Train the MLP-GRU models."""
+"""Train the MLP-GRU models.
+
+Usage (from project root directory):
+
+1. With guild:
+guild run mlp-gru-{tact,vis,mm}:train-{cw,sd}
+
+2. With vanilla Python:
+
+python vtsnn/train_mlp.py \
+ --epochs 500 \
+ --lr 0.0001 \
+ --sample_file 1 \
+ --batch_size 8 \
+ --data_dir /path/to/preprocessed \
+ --hidden_size 32 \
+ --mode tact \
+ --task cw
+
+where mode is one of {tact, vis, mm} and task is {cw, slip}.
+"""
 
 from datetime import datetime
 import matplotlib.pyplot as plt

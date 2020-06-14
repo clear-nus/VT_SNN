@@ -1,3 +1,24 @@
+"""Train the VT-SNN models
+
+1. With guild:
+guild run vtsnn-{tact,vis,mm}:train-{cw,sd}
+
+2. With vanilla Python:
+
+python vtsnn/train_snn.py \
+ --epochs 500 \
+ --lr 0.001 \
+ --sample_file 1 \
+ --batch_size 8 \
+ --network_config network_config/correct_config.yml \
+ --data_dir /path/to/preprocessed \
+ --hidden_size 32 \
+ --loss NumSpikes \
+ --mode tact \
+ --task cw
+
+where mode is one of {tact, vis, mm} and task is {cw, slip}.
+"""
 from pathlib import Path
 import logging
 import argparse
@@ -146,6 +167,7 @@ test_loader = DataLoader(
     shuffle=False,
     num_workers=8,
 )
+
 
 def _train():
     correct = 0

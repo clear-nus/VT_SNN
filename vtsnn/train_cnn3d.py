@@ -1,4 +1,23 @@
-"""Train the CNN3D models."""
+"""Train the CNN3D models.
+
+Usage (from project root directory):
+
+1. With guild:
+guild run cnn3d-{tact,vis,mm}:train-{cw,sd}
+
+2. With vanilla Python:
+
+python vtsnn/train_cnn3d.py \
+ --epochs 1000 \
+ --lr 0.00001 \
+ --sample_file 1 \
+ --batch_size 8 \
+ --data_dir /path/to/preprocessed \
+ --mode tact \
+ --task cw
+
+where mode is one of {tact, vis, mm} and task is {cw, slip}.
+"""
 
 from datetime import datetime
 import matplotlib.pyplot as plt
