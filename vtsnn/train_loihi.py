@@ -14,11 +14,11 @@ python vtsnn/train_loihi.py \
  --data_dir /path/to/preprocessed \
  --hidden_size 32 \
  --loss NumSpikes \
- --mode tact \
- --task cw
+ --mode tact
 
-where mode is one of {tact, vis, mm} and task is {cw, slip}.
+where mode is one of {tact, vis, mm}.
 """
+
 from pathlib import Path
 import logging
 import argparse
@@ -35,7 +35,7 @@ from vtsnn.dataset import ViTacDataset
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger()
 
-parser = argparse.ArgumentParser("Train VT-SNN models.")
+parser = argparse.ArgumentParser("Train Loihi models.")
 
 parser.add_argument(
     "--epochs", type=int, help="Number of epochs.", required=True

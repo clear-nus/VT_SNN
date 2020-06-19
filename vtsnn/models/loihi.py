@@ -16,6 +16,7 @@ class SlayerLoihiMLP(torch.nn.Module):
         self, params, input_size, hidden_size, output_size, quantize=True
     ):
         super(SlayerLoihiMLP, self).__init__()
+        self.hidden_size = hidden_size
         self.output_size = output_size
         self.quantize = quantize
         self.slayer = spikeLayer(params["neuron"], params["simulation"])
@@ -47,7 +48,7 @@ class SlayerLoihiMLP(torch.nn.Module):
             .flatten()
             .cpu()
             .data.numpy()
-            .reshape(args.output_size, -1)
+            .reshape(self.output_size, -1)
         )
 
         np.save(
