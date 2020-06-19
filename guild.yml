@@ -212,6 +212,43 @@
         - max acc/train as max_acc_train
         - max acc/test as max_acc_test
 
+- config: loihi-base
+  operations:
+    train-sd:
+      description: Train the {{desc}} on Slip Detection
+      main: vtsnn.train_loihi
+      requires:
+        - config
+      flags:
+        epochs: 500
+        lr: 0.001
+        sample_file: 1
+        batch_size: 8
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        network_config: network_config/slip_loihi.yml
+        hidden_size: 32
+        loss: NumSpikes
+        mode: '{{mode}}'
+        task: slip
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =loss
+        - loss/train as loss_train
+        - loss/test as loss_test
+        - acc/train as acc_train
+        - acc/test as acc_test
+        - max acc/train as max_acc_train
+        - max acc/test as max_acc_test
+  resources:
+    config:
+      description: SNN network config yml files
+      sources:
+        - file: network_config
+
 - model: vtsnn-tact
   extends: vtsnn-base
   params:
@@ -264,4 +301,22 @@
   extends: cnn3d-base
   params:
     desc: CNN3D multi-modal model
+    mode: mm
+
+- model: loihi-tact
+  extends: loihi-base
+  params:
+    desc: Loihi tactile-only model
+    mode: tact
+
+- model: loihi-vis
+  extends: loihi-base
+  params:
+    desc: Loihi vision-only model
+    mode: vis
+
+- model: loihi-mm
+  extends: loihi-base
+  params:
+    desc: Loihi multi-modal model
     mode: mm
