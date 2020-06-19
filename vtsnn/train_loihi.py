@@ -140,7 +140,7 @@ elif args.loss == "WeightedNumSpikes":
     error = snn.loss(params, spikeLayer).to(device)
     criteria = error.weightedNumSpikes
 
-optimizer = torch.optim.RMSprop(net.parameters(), lr=args.lr, weight_decay=0.5)
+optimizer = torch.optim.RMSprop(net.parameters(), lr=args.lr)
 
 train_dataset = ViTacDataset(
     path=args.data_dir,
