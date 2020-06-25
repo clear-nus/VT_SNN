@@ -44,99 +44,38 @@ The repository has been carefully crafted to use
 [guild.ai](https://github.com/guildai/guildai) to track experiment runs, and its
 use is encouraged.
 
-## Example End-to-end Workflow
+## Usage Instructions
 
-### Data Processing
-First, fetch the data:
-
-<!-- TODO -->
-``` bash
- wget ...
-```
-<!-- TODO: SLIP -->
-
-Next, preprocess the data:
+Our scripts can be run using Guild or vanilla Python. To see all possible operations, run:
 
 ``` bash
-    guild run preprocess 
+guild operations
 ```
 
-In our experiments, we also downsample the image data using pooling, before
-passing them as input to speed up training and reduce the input size. These are
-required to match our model input dimensions. To run the downsampling, run:
+In this repository, we provide code for the 3 models presented in the paper:
+
+1. VT-SNN (Using SLAYER)
+2. ANN (MLP-GRU)
+3. CNN3D
+
+For example, to run our VT-SNN tactile-only model on the Container-Weight classification task, run:
 
 ``` bash
-    guild run downsample
+guild run vtsnn-snn:train-cw data_dir=/path/to/data
 ```
 
-### Training the Models
+Visit the `vtsnn/train_*.py` files for instructions to run with vanilla Python.
 
-#### SNN
+## BibTeX
 
-#### ANN
+To cite this work, please use:
 
-#### 
-
-## Models
-
-1. Tactile unimodal
-
-SNN:
-
-```
-guild run vtsnn:tact-snn sample_file=1 -b
-```
-ANN:
-
-```
-guild run vtsnn:tact-ann sample_file=1 -b
-```
-CNN3D:
-
-```
-guild run vtsnn:tact-cnn3d sample_file=1 -b
-```
-2. Vision unimodal
-
-SNN:
-
-```
-guild run vtsnn:vis-snn sample_file=1 -b
-```
-ANN:
-
-```
-guild run vtsnn:vis-ann sample_file=1 -b
-```
-CNN3D:
-
-```
-guild run vtsnn:vis-cnn3d sample_file=1 -b
-```
-3. Multimodal (tactile + vision)
-
-SNN:
-
-```
-guild run vtsnn:mm-snn sample_file=1 -b
-```
-ANN:
-
-```
-guild run vtsnn:mm-ann sample_file=1 -b
-```
-CNN3D:
-
-```
-guild run vtsnn:mm-cnn3d sample_file=1 -b
-```
-We have also implemented representation learning based on EST (RPG). Within ```rpg_event_representation_learning```, run
-
-1. Tact ETS:
-```
-guild run vtsnn:tac_rpg sample_file=1 -b
-```
-2. Vision ETS:
-```
-guild run vtsnn:vis_rpg sample_file=1 -b
+``` text
+@inproceedings{taunyazov20event,
+    title={Event-Driven Visual-Tactile Sensing and Learning for Robots}, 
+    author={Tasbolat Taunyazoz and Weicong Sng and Hian Hian See and Brian Lim and Jethro Kuan and Abdul Fatir Ansari and Benjamin Tee and Harold Soh},
+    year={2020},  
+    booktitle = {Proceedings of Robotics: Science and Systems}, 
+    year      = {2020}, 
+    month     = {July}}
 ```
