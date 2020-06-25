@@ -61,7 +61,7 @@ In this repository, we provide code for the 3 models presented in the paper:
 For example, to run our VT-SNN tactile-only model on the Container-Weight classification task, run:
 
 ``` bash
-guild run vtsnn-snn:train-cw data_dir=/path/to/data
+guild run vtsnn-tact:train-cw data_dir=/path/to/data
 ```
 
 Visit the `vtsnn/train_*.py` files for instructions to run with vanilla Python.
