@@ -1,7 +1,7 @@
-"""Train the VT-SNN models
+"""Train the Loihi models
 
 1. With guild:
-guild run vtsnn-{tact,vis,mm}:train-{cw,sd}
+guild run loihi-{tact,vis,mm}:train-{cw,sd}
 
 2. With vanilla Python:
 
