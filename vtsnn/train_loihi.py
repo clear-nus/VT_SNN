@@ -111,7 +111,7 @@ elif args.mode == "vis":
     model = SlayerLoihiMLP
     model_args = {
         "params": params,
-        "input_size": (50, 63, 2),
+        "input_size": 50 * 63 * 2,
         "hidden_size": args.hidden_size,
         "output_size": output_size,
     }
@@ -120,7 +120,7 @@ else:  # NOTE: args.hidden_size unused here
     model_args = {
         "params": params,
         "tact_input_size": 156,
-        "vis_input_size": (50, 63, 2),
+        "vis_input_size": 50 * 63 * 2,
         "tact_output_size": 50,
         "vis_output_size": 10,
         "output_size": output_size,
@@ -148,6 +148,7 @@ train_dataset = ViTacDataset(
     output_size=output_size,
     spiking=True,
     mode=args.mode,
+    loihi=True,
 )
 train_loader = DataLoader(
     dataset=train_dataset,
@@ -161,6 +162,7 @@ test_dataset = ViTacDataset(
     output_size=output_size,
     spiking=True,
     mode=args.mode,
+    loihi=True,
 )
 test_loader = DataLoader(
     dataset=test_dataset,

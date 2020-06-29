@@ -11,7 +11,14 @@ from pathlib import Path
 
 class ViTacDataset(Dataset):
     def __init__(
-        self, path, sample_file, output_size, mode, spiking, rectangular=False
+        self,
+        path,
+        sample_file,
+        output_size,
+        mode,
+        spiking,
+        rectangular=False,
+        loihi=False,
     ):
         self.path = path
         self.output_size = output_size
@@ -35,6 +42,10 @@ class ViTacDataset(Dataset):
                 self.vis = torch.load(Path(path) / "ds_vis.pt")
             else:
                 self.vis = torch.load(Path(path) / "ds_vis_non_spike.pt")
+        if loihi and self.vis is not None:
+            self.vis = self.vis.reshape(
+                self.vis.shape[0], -1, 1, 1, self.vis.shape[-1]
+            )
 
     def __getitem__(self, index):
         input_index = self.samples[index, 0]
