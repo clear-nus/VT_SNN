@@ -27,7 +27,7 @@ This project also requires a fork of the
 Neural Network (SNN). To install this dependency, run:
 
 ``` bash
-   git clone https://github.com/bamsumit/slayerPytorch
+   git clone https://github.com/tasbolat1/slayerPytorch
    cd slayerPytorch
    python setup.py install
 ```
