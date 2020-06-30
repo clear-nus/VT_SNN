@@ -24,10 +24,10 @@ pip install -r requirements.txt
 
 This project also requires a fork of the
 [SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn a Spiking
-Neural Network (SNN). To install this dependency, run:
+Neural Network (SNN), which we have included here as a git submodule. To install
+this dependency, run:
 
 ``` bash
-   git clone https://github.com/tasbolat1/slayerPytorch
    cd slayerPytorch
    python setup.py install
 ```

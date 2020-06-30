@@ -1,0 +1,3 @@
+[submodule "slayerPytorch"]
+	path = slayerPytorch
+	url = https://github.com/tasbolat1/slayerPytorch
