@@ -29,7 +29,7 @@
       flags:
         save_path: /home/jethro/data_VTSNN_test/slip_data
         data_path: /datasets/eventdata/slip2/
-        threshold: 1
+        threshold: 0
         selection: full
         bin_duration: 0.001
         n_sample_per_object: 50

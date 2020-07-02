@@ -150,7 +150,7 @@ class TactileData:
 
         traj_start, offset, self.T = selection
         self.start_t = self.trajectory[traj_start] + offset
-        self.threshold = 1
+        self.threshold = args.threshold
 
     def binarize(self, bin_duration):
         bin_number = int(np.floor(self.T / bin_duration))
@@ -241,7 +241,7 @@ class CameraData:
         )
 
         self.df = df
-        self.threshold = 1
+        self.threshold = args.threshold
 
     def binarize(self, bin_duration):
         bin_number = int(np.floor(self.T / bin_duration))
