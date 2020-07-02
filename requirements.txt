@@ -1,0 +1,6 @@
+numpy==1.18.1
+matplotlib==3.2.2
+guildai==0.7.0rc11
+pandas==1.0.5
+torch==1.4.0
+torchvision==0.2.2.post3
