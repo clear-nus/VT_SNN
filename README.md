@@ -11,7 +11,20 @@ container classification and rotational slip detection.
 
 ![img](img/VT_SNN.png)
 
-## Requirements
+## Getting Started
+
+### Cloning the Repository
+
+This project also requires a fork of the
+[SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn a Spiking
+Neural Network (SNN), which we have included here as a git submodule. To obtain
+the full set of dependencies, clone this repository recursively:
+
+``` bash
+git clone https://github.com/tasbolat1/VT_SNN/ --recursive
+```
+
+### Installing Requirements
 
 The requirements for this project that can be installed from PyPI are found in
 `requirements.txt`. To install the requirements, run:
@@ -19,8 +32,6 @@ The requirements for this project that can be installed from PyPI are found in
 ``` bash
 pip install -r requirements.txt
 ```
-
-<!-- TODO -->
 
 This project also requires a fork of the
 [SLAYER](https://github.com/bamsumit/slayerPytorch) framework to learn a Spiking
@@ -32,33 +43,33 @@ this dependency, run:
    python setup.py install
 ```
 
-This repository has been tested on Python 3.6.10.
+This repository has been tested with the declared sets of dependencies, on
+Python 3.6.10.
 
-## Usage
+### Basic Usage
 
 We provide the scripts for preprocessing the raw event data, and training the
-models in the `vtsnn` folder. Instructions for running each script can be found
-in each script. 
+models in the `vtsnn` folder. We provide code for the 3 models presented in our
+paper:
 
+1. VT-SNN (Using SLAYER)
+2. ANN (MLP-GRU)
+3. CNN3D
+ 
 The repository has been carefully crafted to use
 [guild.ai](https://github.com/guildai/guildai) to track experiment runs, and its
-use is encouraged.
+use is encouraged. However, instructions for running each script (using both
+guild and vanilla Python) can be found in each script.
 
-## Usage Instructions
-
-Our scripts can be run using Guild or vanilla Python. To see all possible operations, run:
+To see all possible operations, run:
 
 ``` bash
 guild operations
 ```
 
-In this repository, we provide code for the 3 models presented in the paper:
 
-1. VT-SNN (Using SLAYER)
-2. ANN (MLP-GRU)
-3. CNN3D
-
-For example, to run our VT-SNN tactile-only model on the Container-Weight classification task, run:
+For example, to run our VT-SNN tactile-only model on the Container-Weight
+classification task, run:
 
 ``` bash
 guild run vtsnn-tact:train-cw data_dir=/path/to/data
