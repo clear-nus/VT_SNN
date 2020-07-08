@@ -1,7 +1,8 @@
 """Benchmarking script for GPU run.
 
 1. With guild:
-guild run benchmark
+guild run benchmark model_dir=/path/to/model \
+  data_dir=/path/to/test
 
 2. With vanilla Python:
 
@@ -11,6 +12,7 @@ python vtsnn/benchmark.py \
  --sample_file 1 \
  --batch_size 8 \
  --network_config network_config/correct_config.yml \
+ --model_dir /path/to/model \
  --data_dir /path/to/preprocessed \
  --hidden_size 32 \
  --loss NumSpikes \

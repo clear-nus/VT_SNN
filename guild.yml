@@ -13,8 +13,10 @@
       requires:
         - config
       flags:
-        save_path: /home/jethro/data_VTSNN_test/
-        data_path: /datasets/eventdata/batch2/
+        save_path:
+          required: true
+        data_path:
+          required: true
         threshold: 1
         selection: grasp_lift_hold
         bin_duration: 0.02
@@ -54,7 +56,8 @@
         lr: 0.001
         sample_file: 1
         batch_size: 8
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        data_dir:
+          required: true
         network_config: network_config/container_weight.yml
         hidden_size: 32
         loss: NumSpikes
@@ -83,7 +86,8 @@
         lr: 0.001
         sample_file: 1
         batch_size: 8
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        data_dir:
+          required: true
         network_config: network_config/slip_detection.yml
         hidden_size: 32
         loss: NumSpikes
@@ -118,7 +122,8 @@
         lr: 0.0001
         sample_file: 1
         batch_size: 8
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        data_dir:
+          required: true
         hidden_size: 32
         mode: '{{mode}}'
         task: cw
@@ -143,7 +148,8 @@
         lr: 0.0001
         sample_file: 1
         batch_size: 8
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        data_dir:
+          required: true
         hidden_size: 32
         mode: '{{mode}}'
         task: slip
@@ -171,7 +177,8 @@
         lr: 0.00001
         sample_file: 1
         batch_size: 8
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        data_dir:
+          required: true
         mode: '{{mode}}'
         task: cw
       compare:
@@ -195,7 +202,8 @@
         lr: 0.00001
         sample_file: 1
         batch_size: 8
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        data_dir:
+          required: true
         mode: '{{mode}}'
         task: slip
       compare:
@@ -224,7 +232,8 @@
         lr: 0.001
         sample_file: 1
         batch_size: 8
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        data_dir:
+          required: true
         network_config: network_config/slip_loihi.yml
         hidden_size: 32
         loss: NumSpikes
@@ -252,8 +261,10 @@
         sample_file: 1
         hidden_size: 32
         num_inf: 1000
-        model_dir: /home/jethro/.pyenv/versions/miniconda3-4.3.30/.guild/runs/f87d46011f324aad9fc1b04a3aef58f5
-        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        model_dir:
+          required: true
+        data_dir:
+          required: true
         network_config: network_config/slip_loihi.yml
         log: gpu.yml
         mode: '{{mode}}'
