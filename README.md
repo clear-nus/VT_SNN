@@ -46,6 +46,18 @@ this dependency, run:
 This repository has been tested with the declared sets of dependencies, on
 Python 3.6.10.
 
+### Datasets
+
+The datasets are hosted on Google Drive.
+
+1. Slip Dataset ([Lite](https://drive.google.com/file/d/1VBCwDNwjRqRMQ4iPHo8WRh9n5g92nzt6/view?usp=sharing), [Full](https://drive.google.com/file/d/1Nbg5Egob6McVNEXVvXO8OU-SeUXQBVkN/view?usp=sharing))
+
+We also provide helper scripts for headless fetching of the required data. For slip:
+
+``` bash
+./fetch_slip.sh
+```
+
 ### Basic Usage
 
 We provide the scripts for preprocessing the raw event data, and training the
