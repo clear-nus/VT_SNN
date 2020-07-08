@@ -19,8 +19,10 @@ class ViTacDataset(Dataset):
         spiking,
         rectangular=False,
         loihi=False,
+        size=None,
     ):
         self.path = path
+        self.size = size
         self.output_size = output_size
         self.mode = mode
         self.rectangular = rectangular
@@ -43,11 +45,17 @@ class ViTacDataset(Dataset):
             else:
                 self.vis = torch.load(Path(path) / "ds_vis_non_spike.pt")
         if loihi and self.vis is not None:
+            # combine positive/negative polarities
+            self.vis = torch.from_numpy(
+                np.clip(torch.sum(self.vis, dim=1).numpy(), 0, 1)
+            )
             self.vis = self.vis.reshape(
                 self.vis.shape[0], -1, 1, 1, self.vis.shape[-1]
             )
 
     def __getitem__(self, index):
+        if self.size is not None:
+            index = index % len(self.samples)
         input_index = self.samples[index, 0]
         class_label = self.samples[index, 1]
         target_class = torch.zeros((self.output_size, 1, 1, 1))
@@ -80,4 +88,7 @@ class ViTacDataset(Dataset):
         )
 
     def __len__(self):
-        return self.samples.shape[0]
+        if self.size is not None:
+            return self.size
+        else:
+            return self.samples.shape[0]

@@ -243,6 +243,22 @@
         - acc/test as acc_test
         - max acc/train as max_acc_train
         - max acc/test as max_acc_test
+    benchmark-sd:
+      description: Benchmark the {{desc}} on Slip Detection
+      main: vtsnn.benchmark
+      requires:
+        - config
+      flags:
+        sample_file: 1
+        hidden_size: 32
+        num_inf: 1000
+        model_dir: /home/jethro/.pyenv/versions/miniconda3-4.3.30/.guild/runs/f87d46011f324aad9fc1b04a3aef58f5
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/slip_data
+        network_config: network_config/slip_loihi.yml
+        log: gpu.yml
+        mode: '{{mode}}'
+        task: slip
+
   resources:
     config:
       description: SNN network config yml files

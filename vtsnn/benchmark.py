@@ -35,7 +35,7 @@ import numpy as np
 import slayerSNN as snn
 from pathlib import Path
 import logging
-from snn_models.baseline_snn import SlayerLoihiMLP
+from vtsnn.models.loihi import SlayerLoihiMLP, SlayerLoihiMM
 from slayerSNN import optimizer as optim
 from slayerSNN import loihi as spikeLayer
 from slayerSNN import quantizeParams as quantize
@@ -45,64 +45,91 @@ import argparse
 
 from datetime import datetime
 from vtsnn.dataset import ViTacDataset
-from vtsnn.snn_models.loihi import SlayerLoihiMLP
+from vtsnn.models.loihi import SlayerLoihiMLP, SlayerLoihiMM
 
 parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--model_dir", type=str, help="Path to model.", required=True
+)
 parser.add_argument("--data_dir", type=str, help="Path to data.", required=True)
 parser.add_argument("--bsize", type=int, default=1)
 parser.add_argument("--gpu", type=int, default=0)
 parser.add_argument("--num_inf", type=int)
 parser.add_argument("--log", type=str)
 parser.add_argument("--network_config", type=str)
-parser.add_argument("--output_size", type=int)
+parser.add_argument(
+    "--task",
+    type=str,
+    help="The classification task.",
+    choices=["slip"],  # Loihi can't handle > 16 classes
+    default="slip",
+)
+parser.add_argument(
+    "--mode",
+    type=str,
+    choices=["tact", "vis", "mm"],
+    help="Type of model to benchmark.",
+    required=True,
+)
 parser.add_argument("--hidden_size", type=int)
 parser.add_argument("--sample_file", type=int)
 args = parser.parse_args()
 
 
-class ViTacDataset(Dataset):
-    def __init__(self, path, sample_file, output_size, size):
-        self.path = path
-        self.output_size = output_size
-        self.size = size
-        sample_file = Path(path) / sample_file
-        self.samples = np.loadtxt(sample_file).astype("int")
-        tact = torch.load(Path(path) / "tact.pt")
-        self.tact = tact.reshape(tact.shape[0], -1, 1, 1, tact.shape[-1])
-
-    def __getitem__(self, index):
-        index = index % self.samples.shape[0]
-        input_index = self.samples[index, 0]
-        class_label = self.samples[index, 1]
-        target_class = torch.zeros((self.output_size, 1, 1, 1))
-        target_class[class_label, ...] = 1
-
-        return (
-            self.tact[input_index],
-            torch.tensor(0),
-            target_class,
-            class_label,
-        )
-
-    def __len__(self):
-        return self.size
-
-
-input_size = 156  # Tact
-
 device = torch.device(f"cuda:{args.gpu}")
 params = snn.params(args.network_config)
-net = SlayerLoihiMLP(
-    params, input_size, args.hidden_size, args.output_size, quantize=False
-).to(device)
-net.load_state_dict(torch.load("weights-500.pt"))
-net.fc1.weight.data = snn.utils.quantize(net.fc1.weight, 2)
-net.fc2.weight.data = snn.utils.quantize(net.fc2.weight, 2)
+
+if args.task == "cw":
+    output_size = 20
+else:  # Slip
+    output_size = 2
+
+if args.mode == "tact":
+    model = SlayerLoihiMLP
+    model_args = {
+        "params": params,
+        "input_size": 156,
+        "hidden_size": args.hidden_size,
+        "output_size": output_size,
+    }
+elif args.mode == "vis":
+    model = SlayerLoihiMLP
+    model_args = {
+        "params": params,
+        "input_size": 50 * 63,
+        "hidden_size": args.hidden_size,
+        "output_size": output_size,
+    }
+else:  # NOTE: args.hidden_size unused here
+    model = SlayerLoihiMM
+    model_args = {
+        "params": params,
+        "tact_input_size": 156,
+        "vis_input_size": 50 * 63,
+        "tact_output_size": 50,
+        "vis_output_size": 10,
+        "output_size": output_size,
+    }
+
+net = model(**model_args).to(device)
+
+net.load_state_dict(torch.load(Path(args.model_dir) / "weights_500.pt"))
+
+if args.mode != "mm":
+    net.fc1.weight.data = snn.utils.quantize(net.fc1.weight, 2)
+    net.fc2.weight.data = snn.utils.quantize(net.fc2.weight, 2)
+else:
+    net.tact_fc.weight.data = snn.utils.quantize(net.tact_fc.weight, 2)
+    net.vis_fc.weight.data = snn.utils.quantize(net.vis_fc.weight, 2)
+    net.combi.weight.data = snn.utils.quantize(net.combi.weight, 2)
 
 test_dataset = ViTacDataset(
     path=args.data_dir,
     sample_file=f"test_80_20_{args.sample_file}.txt",
-    output_size=args.output_size,
+    output_size=output_size,
+    spiking=True,
+    loihi=True,
+    mode=args.mode,
     size=args.num_inf,
 )
 
@@ -126,12 +153,15 @@ proc = subprocess.Popen(
 time.sleep(5)
 
 step_count = 0
+correct = 0
 start_time = time.time()
 start_tag = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-for i, (tact, _, _, _) in enumerate(test_loader):
-    tact = tact.to(device)
-    output = net.forward(tact)
+for *data, target, label in test_loader:
+    data = [d.to(device) for d in data]
+    target = target.to(device)
+    output = net.forward(*data)
+    correct += torch.sum(snn.predict.getClass(output) == label).data.item()
 
 end_tag = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 elapsed_time = time.time() - start_time
