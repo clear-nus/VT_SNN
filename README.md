@@ -115,7 +115,7 @@ To cite this work, please use:
 
 ## Troubleshooting
 
-if `guild` cannot find the current guild operations, please run:
+if `guild` cannot find the current guild operations, please run within VT_SNN folder:
 
 ``` 
 export $PYTHONPATH=.
