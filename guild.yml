@@ -3,7 +3,7 @@
   data-files:
     - network_config/*.yml
 
-- model: vtsnn
+- model: vtsnn6
   description: VT-SNN models
   sourcecode:
     select:
@@ -53,6 +53,7 @@
         - output_size
         - checkpoint_dir
         - loss_type
+        - data_dir
       flags:
         batch_size: 8
         epochs: 500
@@ -89,6 +90,68 @@
         - max acc/test as max_acc_test
         - acc/test as acc_test
         - acc/train as acc_train
+    tact-snn-2:
+      description: Train tactile model using SNN
+      main: train_tac_snn_finger
+      output-scalars: no
+      objective:
+        maximize: acc/test
+      flags-import:
+        - batch_size
+        - epochs
+        - tsample
+        - tsr_stop
+        - sc_true
+        - sc_false
+        - lr
+        - theta
+        - tauRho
+        - sample_file
+        - hidden_size
+        - output_size
+        - checkpoint_dir
+        - loss_type
+        - data_dir
+        - finger_type
+      flags:
+        batch_size: 8
+        epochs: 500
+        lr: 0.001
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        tsample: 325
+        tauRho: 1
+        tsr_stop: 325
+        sc_true: 150
+        sc_false: 5
+        theta: 10
+        sample_file: 1
+        hidden_size: 32
+        checkpoint_dir: . 
+        output_size: 3
+        loss_type: 0
+        finger_type: 0
+      compare:
+        - =batch_size
+        - =epochs
+        - =tsample
+        - =tsr_stop
+        - =sc_true
+        - =sc_false
+        - =lr
+        - =theta
+        - =tauRho
+        - =sample_file
+        - =hidden_size
+        - =loss_type
+        - =output_size
+        - =finger_type
+        - loss/train as loss_train
+        - max acc/train as max_acc_train
+        - loss/test as loss_test
+        - max acc/test as max_acc_test
+        - acc/test as acc_test
+        - acc/train as acc_train
+        - finger_type
     vis-snn:
       description: Train vizual model
       main: train_vis_snn

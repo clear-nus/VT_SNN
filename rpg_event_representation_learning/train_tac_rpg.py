@@ -64,7 +64,7 @@ class RawDataset(Dataset):
         return self.samples.shape[0]
 
 
-device = torch.device('cuda:1')
+device = torch.device('cuda:0')
 writer = SummaryWriter(".")
 
 

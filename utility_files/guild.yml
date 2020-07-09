@@ -1,0 +1,33 @@
+- package: gen
+  version: 0.0.0
+
+- model: gen
+  description: Video generations models
+  sourcecode:
+    select:
+      - exclude: slayerPytorch
+  operations:
+    vis:
+      description: Generate spike vision video 
+      main: generate_spike_vision_video
+      flags:
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        target_dir: /home/tasbolat/some_python_examples/VT_SNN/utility_files/vision/
+        obj: pepsi
+        weight_class: a
+    tact:
+      description: Generate spike tactile video 
+      main: generate_spike_tactile_video
+      flags:
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        target_dir: /home/tasbolat/some_python_examples/VT_SNN/utility_files/vision/
+        obj: pepsi
+        weight_class: a
+    tact-plot:
+      description: Generate spike tactile_plot video 
+      main: generate_spike_tactile_plot_video
+      flags:
+        data_dir: /home/tasbolat/some_python_examples/data_VT_SNN_new/
+        target_dir: /home/tasbolat/some_python_examples/VT_SNN/utility_files/vision/
+        obj: pepsi
+        weight_class: a

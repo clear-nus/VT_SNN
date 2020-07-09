@@ -57,9 +57,9 @@ parser.add_argument(
 parser.add_argument(
     "--n_sample_per_object", type=int, help="Number of samples per class.", required=True
 )
-parser.add_argument(
-    "--slip", type=int, help="is this data preprocessing for slip?.", required=True
-)
+# parser.add_argument(
+#     "--slip", type=int, help="is this data preprocessing for slip?.", required=True
+# )
 
 
 parser.add_argument(
@@ -84,30 +84,30 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-# THIS READ TACTILE CODE for new sensors
-# def read_tactile_file(tactile_path, obj_name):
-#     """Reads a tactile file from path. Returns a pandas dataframe."""
-#     obj_path = Path(tactile_path) / f"{obj_name}.tact"
-#     df = pd.read_csv(
-#         obj_path,
-#         delimiter=" ",
-#         names=["polarity", "cell_index", "timestamp"],
-#         dtype={'polarity': int, 'cell_index': int, 'timestamp': float}
-#     )
-#     return df
-
+#THIS READ TACTILE CODE for new sensors
 def read_tactile_file(tactile_path, obj_name):
     """Reads a tactile file from path. Returns a pandas dataframe."""
     obj_path = Path(tactile_path) / f"{obj_name}.tact"
     df = pd.read_csv(
         obj_path,
         delimiter=" ",
-        names=["polarity", "cell_index", "timestamp_sec", "timestamp_nsec"],
-        dtype=int,
+        names=["polarity", "cell_index", "timestamp"],
+        dtype={'polarity': int, 'cell_index': int, 'timestamp': float}
     )
-    df = df.assign(timestamp=df.timestamp_sec + df.timestamp_nsec / 1000000000)
-    df = df.drop(["timestamp_sec", "timestamp_nsec"], axis=1)
     return df
+
+# def read_tactile_file(tactile_path, obj_name):
+#     """Reads a tactile file from path. Returns a pandas dataframe."""
+#     obj_path = Path(tactile_path) / f"{obj_name}.tact"
+#     df = pd.read_csv(
+#         obj_path,
+#         delimiter=" ",
+#         names=["polarity", "cell_index", "timestamp_sec", "timestamp_nsec"],
+#         dtype=int,
+#     )
+#     df = df.assign(timestamp=df.timestamp_sec + df.timestamp_nsec / 1000000000)
+#     df = df.drop(["timestamp_sec", "timestamp_nsec"], axis=1)
+#     return df
 
 
 def read_trajectory(trajectory_path, obj_name, start_time=None, zeroed=False):
@@ -325,34 +325,39 @@ class ViTacData:
 
 
 # batch2
-if args.slip == 0:
-    list_of_objects2 = [
-        "107-a_pepsi_bottle",
-        "107-b_pepsi_bottle",
-        "107-c_pepsi_bottle",
-        "107-d_pepsi_bottle",
-        "107-e_pepsi_bottle",
-        "108-a_tuna_fish_can",
-        "108-b_tuna_fish_can",
-        "108-c_tuna_fish_can",
-        "108-d_tuna_fish_can",
-        "108-e_tuna_fish_can",
-        "109-a_soymilk",
-        "109-b_soymilk",
-        "109-c_soymilk",
-        "109-d_soymilk",
-        "109-e_soymilk",
-        "110-a_coffee_can",
-        "110-b_coffee_can",
-        "110-c_coffee_can",
-        "110-d_coffee_can",
-        "110-e_coffee_can",
-    ]
-elif args.slip == 1:
-    list_of_objects2 = [
-        'stable',
-        'rotate'
-    ]
+#if args.slip == 0:
+list_of_objects2 = [
+    "110-b_coffee_can",
+    "110-c_coffee_can",
+    "110-d_coffee_can",
+]
+#     list_of_objects2 = [
+#         "107-a_pepsi_bottle",
+#         "107-b_pepsi_bottle",
+#         "107-c_pepsi_bottle",
+#         "107-d_pepsi_bottle",
+#         "107-e_pepsi_bottle",
+#         "108-a_tuna_fish_can",
+#         "108-b_tuna_fish_can",
+#         "108-c_tuna_fish_can",
+#         "108-d_tuna_fish_can",
+#         "108-e_tuna_fish_can",
+#         "109-a_soymilk",
+#         "109-b_soymilk",
+#         "109-c_soymilk",
+#         "109-d_soymilk",
+#         "109-e_soymilk",
+#         "110-a_coffee_can",
+#         "110-b_coffee_can",
+#         "110-c_coffee_can",
+#         "110-d_coffee_can",
+#         "110-e_coffee_can",
+#     ]
+# elif args.slip == 1:
+#     list_of_objects2 = [
+#         'stable',
+#         'rotate'
+#     ]
 
 ViTac = ViTacData(Path(args.save_dir), list_of_objects2, selection=args.selection)
 
@@ -383,7 +388,7 @@ labels = np.array(labels)
 # stratified k fold
 from sklearn.model_selection import StratifiedKFold
 
-skf = StratifiedKFold(n_splits=5, random_state=100, shuffle=True)
+skf = StratifiedKFold(n_splits=3, random_state=100, shuffle=True)
 train_indices = []
 test_indices = []
 
@@ -396,7 +401,7 @@ for train_index, test_index in  skf.split(np.zeros(len(labels)), labels[:,1]):
 print('Training size:', len(train_indices[0]),', Testing size:',  len(test_indices[0]))
 
 # write to the file
-splits = ['80_20_1','80_20_2','80_20_3','80_20_4', '80_20_5']
+splits = ['80_20_1','80_20_2','80_20_3']#,'80_20_4', '80_20_5']
 count = 0
 for split in splits:
     np.savetxt(args.save_dir + 'train_' + split + '.txt', np.array(labels[train_indices[count], :], dtype=int), fmt='%d', delimiter='\t')
