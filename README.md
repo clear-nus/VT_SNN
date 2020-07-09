@@ -9,7 +9,7 @@ fast perception when coupled with event sensors. We evaluate our visual-tactile
 system (using the NeuTouch and Prophesee event camera) on two robot tasks:
 container classification and rotational slip detection.
 
-![img](img/VT_SNN.png)
+[![Watch the video](https://img.youtube.com/vi/zPlrqtjEcUY/maxresdefault.jpg)](https://www.youtube.com/watch?v=zPlrqtjEcUY)
 
 ## Getting Started
 
