@@ -24,7 +24,7 @@ Neural Network (SNN), which we have included here as a git submodule. To obtain
 the full set of dependencies, clone this repository recursively:
 
 ``` bash
-git clone https://github.com/tasbolat1/VT_SNN/ --recursive
+git clone https://github.com/clear-nus/VT_SNN/ --recursive
 ```
 
 ### Installing Requirements
