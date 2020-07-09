@@ -10,13 +10,9 @@ system (using the NeuTouch and Prophesee event camera) on two robot tasks:
 container classification and rotational slip detection. For more details, please go to
 our [official web-page](https://clear-nus.github.io/visuotactile/).
 
-<<<<<<< HEAD
 <!--- ![img](img/VT_SNN.png) --->
 
 [![](http://img.youtube.com/vi/zPlrqtjEcUY/0.jpg)](https://www.youtube.com/watch?v=zPlrqtjEcUY "")
-=======
-[![Watch the video](https://img.youtube.com/vi/zPlrqtjEcUY/maxresdefault.jpg)](https://www.youtube.com/watch?v=zPlrqtjEcUY)
->>>>>>> b018d35558f69838a16e892ab382f752a4f78313
 
 ## Getting Started
 
