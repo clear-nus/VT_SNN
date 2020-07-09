@@ -7,9 +7,12 @@ NeuTouch, scales well with the number of taxels thanks to its event-based
 nature. Likewise, our Visual-Tactile Spiking Neural Network (VT-SNN) enables
 fast perception when coupled with event sensors. We evaluate our visual-tactile
 system (using the NeuTouch and Prophesee event camera) on two robot tasks:
-container classification and rotational slip detection.
+container classification and rotational slip detection. For more details, please go to
+our [official web-page](https://clear-nus.github.io/visuotactile/).
 
-![img](img/VT_SNN.png)
+<!--- ![img](img/VT_SNN.png) --->
+
+[![](http://img.youtube.com/vi/zPlrqtjEcUY/0.jpg)](https://www.youtube.com/watch?v=zPlrqtjEcUY "")
 
 ## Getting Started
 
@@ -58,6 +61,13 @@ We also provide helper scripts for headless fetching of the required data. For s
 ./fetch_slip.sh
 ```
 
+The preprocessed data can be also downloaded with parameters specified in the paper:
+
+``` bash
+./fetch_slip.sh preprocess
+```
+
+
 ### Basic Usage
 
 We provide the scripts for preprocessing the raw event data, and training the
@@ -101,4 +111,12 @@ To cite this work, please use:
     booktitle = {Proceedings of Robotics: Science and Systems}, 
     year      = {2020}, 
     month     = {July}}
+```
+
+## Troubleshooting
+
+if `guild` cannot find the current guild operations, please run:
+
+``` 
+export $PYTHONPATH=.
 ```
