@@ -115,8 +115,8 @@ To cite this work, please use:
 
 ## Troubleshooting
 
-if `guild` cannot find the current guild operations, please run within VT_SNN folder:
+if your scripts cannot find the `vtsnn` module, please run in the root directory:
 
 ``` 
-export $PYTHONPATH=.
+export PYTHONPATH=.
 ```
