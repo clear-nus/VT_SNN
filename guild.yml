@@ -269,6 +269,7 @@
         log: gpu.yml
         mode: '{{mode}}'
         task: slip
+        delay: 0
 
   resources:
     config:

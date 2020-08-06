@@ -54,6 +54,7 @@ parser.add_argument(
     "--model_dir", type=str, help="Path to model.", required=True
 )
 parser.add_argument("--data_dir", type=str, help="Path to data.", required=True)
+parser.add_argument("--delay", type=float, help="Artificial delay to add (in seconds).", default=0, required=True)
 parser.add_argument("--bsize", type=int, default=1)
 parser.add_argument("--gpu", type=int, default=0)
 parser.add_argument("--num_inf", type=int)
@@ -155,7 +156,7 @@ proc = subprocess.Popen(
 time.sleep(5)
 
 step_count = 0
-correct = 0
+# correct = 0
 start_time = time.time()
 start_tag = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -163,7 +164,8 @@ for *data, target, label in test_loader:
     data = [d.to(device) for d in data]
     target = target.to(device)
     output = net.forward(*data)
-    correct += torch.sum(snn.predict.getClass(output) == label).data.item()
+    time.sleep(args.delay)
+    # correct += torch.sum(snn.predict.getClass(output) == label).data.item()
 
 end_tag = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 elapsed_time = time.time() - start_time
