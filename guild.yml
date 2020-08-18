@@ -44,6 +44,23 @@
       sources:
         - file: network_config
 
+- model: analyse
+  operations:
+    vtsnn:
+      description: Analyse SNNs
+      main: vtsnn.analyse_snn
+      requires:
+        - config
+      flags:
+        model_dirs:
+          required: true
+          type: path
+  resources:
+    config:
+      description: SNN network config yml files
+      sources:
+        - file: network_config
+
 - config: vtsnn-base
   operations:
     train-cw:
