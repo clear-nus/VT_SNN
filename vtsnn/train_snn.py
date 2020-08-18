@@ -22,6 +22,7 @@ where mode is one of {tact, vis, mm} and task is {cw, slip}.
 from pathlib import Path
 import logging
 import argparse
+import pickle
 
 import torch
 from torch.utils.data import DataLoader
@@ -211,8 +212,9 @@ def _test():
 def _save_model(epoch):
     log.info(f"Writing model at epoch {epoch}...")
     checkpoint_path = Path(args.checkpoint_dir) / f"weights_{epoch:03d}.pt"
+    model_path = Path(args.checkpoint_dir) / f"model_{epoch:03d}.pt"
     torch.save(net.state_dict(), checkpoint_path)
-
+    torch.save(net, model_path)
 
 for epoch in range(1, args.epochs + 1):
     _train()
@@ -220,3 +222,6 @@ for epoch in range(1, args.epochs + 1):
         _test()
     if epoch % 100 == 0:
         _save_model(epoch)
+
+with open("args.pkl", "wb") as f:
+    pickle.dump(args, f)
