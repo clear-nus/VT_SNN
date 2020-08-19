@@ -33,6 +33,10 @@ mode_map = {
     "mm": "Combined"
 }
 
+def _is_run_dir(p):
+    file_list = [f for f in os.listdir(p) if os.path.isfile(os.path.join(p, f))]
+    return ("args.pkl" in file_list)
+
 def plot_confusion(predicted, actual, model, args):
     "Plots the confusion matrix."
     fig, ax = plt.subplots(figsize=(6,4))
@@ -123,9 +127,11 @@ if __name__ == "__main__":
     runs = [os.path.join(run_args.runs, dir) for dir in os.listdir(run_args.runs)
             if os.path.isdir(os.path.join(run_args.runs, dir))]
     for model in runs:
-        model_dir = Path(model)
-        df = analyse_model(model_dir)
-        dfs.append(df)
+        if _is_run_dir(model):
+            print(f"Processing {model}...")
+            model_dir = Path(model)
+            df = analyse_model(model_dir)
+            dfs.append(df)
 
     combined_df = pd.concat(dfs)
     combined_df = combined_df.assign(t=combined_df.Length*0.02)
