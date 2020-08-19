@@ -52,9 +52,8 @@
       requires:
         - config
       flags:
-        model_dirs:
+        runs:
           required: true
-          type: path
   resources:
     config:
       description: SNN network config yml files

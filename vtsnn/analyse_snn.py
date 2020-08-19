@@ -3,13 +3,17 @@
 Here, we plot the confusion matrices, and the early classification curves for the trained model."""
 
 import argparse
+import os
 import pickle
 from pathlib import Path
 
 import torch
+import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+
+from matplotlib.legend import Legend
 
 from torch.utils.data import DataLoader
 import slayerSNN as snn
@@ -18,18 +22,27 @@ from vtsnn.dataset import ViTacDataset
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--model_dirs", action="store", type=str, help="Path to trained model.", nargs="+", required=True
+    "--runs", action="store", type=str, help="Path containing all the run directories.", required=True
 )
 
 run_args = parser.parse_args()
 
-def plot_confusion(predicted, actual, model):
+mode_map = {
+    "tact": "Tactile",
+    "vis": "Vision",
+    "mm": "Combined"
+}
+
+def plot_confusion(predicted, actual, model, args):
     "Plots the confusion matrix."
+    fig, ax = plt.subplots(figsize=(6,4))
     data = { "predicted": predicted, "actual": actual}
     df = pd.DataFrame(data, columns=["predicted", "actual"])
     cfm = pd.crosstab(df["actual"], df["predicted"], rownames=["Actual"], colnames=["Predicted"])
     sns.heatmap(cfm, annot=True)
-    plt.savefig(f"confusion_{model.name}.png", tight_layout=True)
+    output_dir = f"confusion/{args.task}/{args.mode}_{args.loss}_{args.sample_file}"
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    fig.savefig(Path(output_dir) / f"{model.name}.png", tight_layout=True)
 
 def analyse_model(model_dir):
     "Saves the confusion matrix, and returns a Panda dataframe for the accuracy."
@@ -66,6 +79,8 @@ def analyse_model(model_dir):
     accs = {
         "Accuracy": [],
         "Length": [],
+        "Modality": [],
+        "Loss Function": [],
         "Model": [],
         "Args": []
     }
@@ -91,25 +106,42 @@ def analyse_model(model_dir):
                 early_correct += torch.sum(snn.predict.getClass(early_output) == label).data.item()
             accs["Accuracy"].append(early_correct / len(test_loader.dataset))
             accs["Model"].append(model_dir.name)
+            accs["Modality"].append(mode_map.get(args.mode))
+            accs["Loss Function"].append(args.loss)
             accs["Length"].append(t)
             accs["Args"].append(str(args))
 
     predictions = list(map(lambda v: v.item(), predictions))
     actual = list(map(lambda v: v.item(), actual))
 
-    plot_confusion(predictions, actual, model_dir)
+    plot_confusion(predictions, actual, model_dir, args)
 
     return pd.DataFrame(accs)
 
 if __name__ == "__main__":
     dfs = []
-    for model in run_args.model_dirs:
+    runs = [os.path.join(run_args.runs, dir) for dir in os.listdir(run_args.runs)
+            if os.path.isdir(os.path.join(run_args.runs, dir))]
+    for model in runs:
         model_dir = Path(model)
         df = analyse_model(model_dir)
         dfs.append(df)
 
     combined_df = pd.concat(dfs)
     combined_df = combined_df.assign(t=combined_df.Length*0.02)
+    combined_df.to_pickle("df.pkl")
+
+    sns.set_context('paper')
+    sns.set_style('whitegrid')
+    sns.set(rc={"xtick.bottom" : True, 'font.sans-serif': 'Liberation Sans'}, context='paper', style='whitegrid', palette='Set1')
     fig, ax = plt.subplots(figsize=(10,4))
-    sns.lineplot(x="t", y="Accuracy", data=combined_df)
+    sns.lineplot(x="t", y="Accuracy", hue="Modality", style="Loss Function", ci="sd", linewidth=2, hue_order=["Tactile", "Vision", "Combined"], data=combined_df)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend_.remove()
+    leg = Legend(ax, handles=handles[1:4], labels=labels[1:4], loc='upper left', frameon=True, prop={'size': 14})
+    ax.add_artist(leg)
+    leg = Legend(ax, handles=handles[5:], labels=labels[5:], loc='lower right', frameon=True, prop={'size': 14})
+    ax.add_artist(leg)
+    plt.xlabel('Time (s)', fontsize=14)
+    plt.ylabel('Test Accuracy', fontsize=14)
     fig.savefig("early_classification.png", tight_layout=True)
