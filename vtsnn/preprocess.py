@@ -114,17 +114,28 @@ elif args.task == "slip":
     )
 
 
-def read_tactile_file(data_path, obj_name):
+# def read_tactile_file(data_path, obj_name):
+#     """Reads a tactile file from path. Returns a pandas dataframe."""
+#     obj_path = Path(data_path) / "aces_recordings" / f"{obj_name}.tact"
+#     df = pd.read_csv(
+#         obj_path,
+#         delimiter=" ",
+#         names=["polarity", "cell_index", "timestamp_sec", "timestamp_nsec"],
+#         dtype=int,
+#     )
+#     df = df.assign(timestamp=df.timestamp_sec + df.timestamp_nsec / 1000000000)
+#     df = df.drop(["timestamp_sec", "timestamp_nsec"], axis=1)
+#     return df
+
+def read_tactile_file(tactile_path, obj_name):
     """Reads a tactile file from path. Returns a pandas dataframe."""
-    obj_path = Path(data_path) / "aces_recordings" / f"{obj_name}.tact"
+    obj_path = Path(tactile_path) / "aces_recordings"/ f"{obj_name}.tact"
     df = pd.read_csv(
         obj_path,
         delimiter=" ",
-        names=["polarity", "cell_index", "timestamp_sec", "timestamp_nsec"],
-        dtype=int,
+        names=["polarity", "cell_index", "timestamp"],
+        dtype={'polarity': int, 'cell_index': int, 'timestamp': float}
     )
-    df = df.assign(timestamp=df.timestamp_sec + df.timestamp_nsec / 1000000000)
-    df = df.drop(["timestamp_sec", "timestamp_nsec"], axis=1)
     return df
 
 

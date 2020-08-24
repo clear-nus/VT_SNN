@@ -79,6 +79,14 @@
         loss: NumSpikes
         mode: '{{mode}}'
         task: cw
+        truesc: 150
+        falsesc: 5
+        theta: 10
+        tausr: 10.0
+        tauref: 1.0
+        scaleref: 2
+        taurho: 1
+        scalerho: 1
       compare:
         - =batch_size
         - =epochs

@@ -88,11 +88,63 @@ parser.add_argument(
     choices=["NumSpikes", "WeightedNumSpikes"],
     required=True,
 )
+parser.add_argument(
+    "--truesc",
+    type=int,
+    help="Target true spike count."
+)
+parser.add_argument(
+    "--falsesc",
+    type=int,
+    help="Target false spike count."
+)
+parser.add_argument(
+    "--theta",
+    type=int,
+    help="Theta"
+)
+parser.add_argument(
+    "--tausr",
+    type=float,
+)
+parser.add_argument(
+    "--tauref",
+    type=float
+)
+parser.add_argument(
+    "--scaleref",
+    type=int
+)
+parser.add_argument(
+    "--taurho",
+    type=int
+)
+parser.add_argument(
+    "--scalerho",
+    type=int
+)
 args = parser.parse_args()
 
 LOSS_TYPES = ["NumSpikes", "WeightedNumSpikes"]
 
 params = snn.params(args.network_config)
+
+if args.truesc:
+    params["training"]["error"]["tgtSpikeCount"]["true"] = args.truesc
+if args.falsesc:
+    params["training"]["error"]["tgtSpikeCount"]["false"] = args.falsesc
+if args.theta:
+    params["neuron"]["theta"]= args.theta
+if args.tausr:
+    params["neuron"]["tausr"] = args.tausr
+if args.tauref:
+    params["neuron"]["tauref"] = args.tauref
+if args.scaleref:
+    params["neuron"]["scaleref"] = args.scaleref
+if args.taurho:
+    params["neuron"]["taurho"] = args.taurho
+if args.scalerho:
+    params["neuron"]["scalerho"] = args.scalerho
 
 if args.task == "cw":
     output_size = 20
