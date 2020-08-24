@@ -3,7 +3,7 @@
 Usage (from project root directory):
 
 1. With guild:
-guild run cnn3d-{tact,vis,mm}:train-{cw,sd}
+guild run cnn3d:train-{cw,sd} mode={tact,vis,mm} data_dir=/path/to/preprocessed
 
 2. With vanilla Python:
 

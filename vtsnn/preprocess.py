@@ -50,7 +50,10 @@ parser.add_argument(
 )
 parser.add_argument("--blacklist_path", type=str, help="Path to blacklist.")
 parser.add_argument(
-    "--threshold", type=int, help="Threshold for tactile.", required=True
+    "--tact_threshold", type=int, help="Threshold for tactile.", required=True
+)
+parser.add_argument(
+    "--vis_threshold", type=int, help="Threshold for vision.", required=True
 )
 parser.add_argument(
     "--n_sample_per_object",
@@ -114,17 +117,28 @@ elif args.task == "slip":
     )
 
 
-def read_tactile_file(data_path, obj_name):
+# def read_tactile_file(data_path, obj_name):
+#     """Reads a tactile file from path. Returns a pandas dataframe."""
+#     obj_path = Path(data_path) / "aces_recordings" / f"{obj_name}.tact"
+#     df = pd.read_csv(
+#         obj_path,
+#         delimiter=" ",
+#         names=["polarity", "cell_index", "timestamp_sec", "timestamp_nsec"],
+#         dtype=int,
+#     )
+#     df = df.assign(timestamp=df.timestamp_sec + df.timestamp_nsec / 1000000000)
+#     df = df.drop(["timestamp_sec", "timestamp_nsec"], axis=1)
+#     return df
+
+def read_tactile_file(tactile_path, obj_name):
     """Reads a tactile file from path. Returns a pandas dataframe."""
-    obj_path = Path(data_path) / "aces_recordings" / f"{obj_name}.tact"
+    obj_path = Path(tactile_path) / "aces_recordings"/ f"{obj_name}.tact"
     df = pd.read_csv(
         obj_path,
         delimiter=" ",
-        names=["polarity", "cell_index", "timestamp_sec", "timestamp_nsec"],
-        dtype=int,
+        names=["polarity", "cell_index", "timestamp"],
+        dtype={'polarity': int, 'cell_index': int, 'timestamp': float}
     )
-    df = df.assign(timestamp=df.timestamp_sec + df.timestamp_nsec / 1000000000)
-    df = df.drop(["timestamp_sec", "timestamp_nsec"], axis=1)
     return df
 
 
@@ -150,7 +164,7 @@ class TactileData:
 
         traj_start, offset, self.T = selection
         self.start_t = self.trajectory[traj_start] + offset
-        self.threshold = args.threshold
+        self.threshold = args.tact_threshold
 
     def binarize(self, bin_duration):
         bin_number = int(np.floor(self.T / bin_duration))
@@ -241,7 +255,7 @@ class CameraData:
         )
 
         self.df = df
-        self.threshold = args.threshold
+        self.threshold = args.vis_threshold
 
     def binarize(self, bin_duration):
         bin_number = int(np.floor(self.T / bin_duration))

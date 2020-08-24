@@ -17,10 +17,11 @@
           required: true
         data_path:
           required: true
-        threshold: 1
+        tact_threshold: 0
+        vis_threshold: 1
         selection: grasp_lift_hold
         bin_duration: 0.02
-        n_sample_per_object: 20
+        n_sample_per_object: 40
         network_config: network_config/container_weight.yml
         task: cw
     preprocess-slip:
@@ -31,7 +32,8 @@
       flags:
         save_path: /home/jethro/data_VTSNN_test/slip_data
         data_path: /datasets/eventdata/slip2/
-        threshold: 0
+        tact_threshold: 0
+        vis_threshold: 0
         selection: full
         bin_duration: 0.001
         n_sample_per_object: 50
@@ -60,10 +62,10 @@
       sources:
         - file: network_config
 
-- config: vtsnn-base
+- model: vtsnn
   operations:
     train-cw:
-      description: Train the {{desc}} on Container & Weight Classification
+      description: Train the VT-SNN model on Container & Weight Classification
       main: vtsnn.train_snn
       requires:
         - config
@@ -77,7 +79,8 @@
         network_config: network_config/container_weight.yml
         hidden_size: 32
         loss: NumSpikes
-        mode: '{{mode}}'
+        mode:
+          required: true
         task: cw
       compare:
         - =batch_size
@@ -93,7 +96,7 @@
         - max acc/train as max_acc_train
         - max acc/test as max_acc_test
     train-sd:
-      description: Train the {{desc}} on Slip Detection
+      description: Train the VT-SNN model on Slip Detection
       main: vtsnn.train_snn
       requires:
         - config
@@ -107,7 +110,8 @@
         network_config: network_config/slip_detection.yml
         hidden_size: 32
         loss: NumSpikes
-        mode: '{{mode}}'
+        mode:
+          required: true
         task: slip
       compare:
         - =batch_size
@@ -128,10 +132,10 @@
       sources:
         - file: network_config
 
-- config: mlp-gru-base
+- model: mlp-gru
   operations:
     train-cw:
-      description: Train the {{desc}} on Container & Weight Classification
+      description: Train the MLP-GRU on Container & Weight Classification
       main: vtsnn.train_mlp
       flags:
         epochs: 500
@@ -141,7 +145,8 @@
         data_dir:
           required: true
         hidden_size: 32
-        mode: '{{mode}}'
+        mode:
+          required: true
         task: cw
       compare:
         - =batch_size
@@ -157,7 +162,7 @@
         - max acc/train as max_acc_train
         - max acc/test as max_acc_test
     train-sd:
-      description: Train the {{desc}} on Slip Detection
+      description: Train the MLP-GRU model on Slip Detection
       main: vtsnn.train_mlp
       flags:
         epochs: 500
@@ -167,7 +172,8 @@
         data_dir:
           required: true
         hidden_size: 32
-        mode: '{{mode}}'
+        mode:
+          required: true
         task: slip
       compare:
         - =batch_size
@@ -183,10 +189,10 @@
         - max acc/train as max_acc_train
         - max acc/test as max_acc_test
 
-- config: cnn3d-base
+- model: cnn3d
   operations:
     train-cw:
-      description: Train the {{desc}} on Container & Weight Classification
+      description: Train the CNN3D model on Container & Weight Classification
       main: vtsnn.train_cnn3d
       flags:
         epochs: 1000
@@ -195,7 +201,8 @@
         batch_size: 8
         data_dir:
           required: true
-        mode: '{{mode}}'
+        mode:
+          required: true
         task: cw
       compare:
         - =batch_size
@@ -211,7 +218,7 @@
         - max acc/train as max_acc_train
         - max acc/test as max_acc_test
     train-sd:
-      description: Train the {{desc}} on Slip Detection
+      description: Train the CNN3D model on Slip Detection
       main: vtsnn.train_cnn3d
       flags:
         epochs: 1000
@@ -220,7 +227,8 @@
         batch_size: 8
         data_dir:
           required: true
-        mode: '{{mode}}'
+        mode:
+          required: true
         task: slip
       compare:
         - =batch_size
@@ -236,10 +244,10 @@
         - max acc/train as max_acc_train
         - max acc/test as max_acc_test
 
-- config: loihi-base
+- config: loihi
   operations:
     train-sd:
-      description: Train the {{desc}} on Slip Detection
+      description: Train the Loihi model on Slip Detection
       main: vtsnn.train_loihi
       requires:
         - config
@@ -253,7 +261,8 @@
         network_config: network_config/slip_loihi.yml
         hidden_size: 32
         loss: NumSpikes
-        mode: '{{mode}}'
+        mode:
+          required: true
         task: slip
       compare:
         - =batch_size
@@ -269,7 +278,7 @@
         - max acc/train as max_acc_train
         - max acc/test as max_acc_test
     benchmark-sd:
-      description: Benchmark the {{desc}} on Slip Detection
+      description: Benchmark the Loihi model on Slip Detection
       main: vtsnn.benchmark
       requires:
         - config
@@ -283,7 +292,8 @@
           required: true
         network_config: network_config/slip_loihi.yml
         log: gpu.yml
-        mode: '{{mode}}'
+        mode:
+          required: true
         task: slip
         delay: 0
 
@@ -292,75 +302,3 @@
       description: SNN network config yml files
       sources:
         - file: network_config
-
-- model: vtsnn-tact
-  extends: vtsnn-base
-  params:
-    desc: VT-SNN tactile-only model
-    mode: tact
-
-- model: vtsnn-vis
-  extends: vtsnn-base
-  params:
-    desc: VT-SNN vision-only model
-    mode: vis
-
-- model: vtsnn-mm
-  extends: vtsnn-base
-  params:
-    desc: VT-SNN multi-modal model 
-    mode: mm
-
-- model: mlp-gru-tact
-  extends: mlp-gru-base
-  params:
-    desc: MLP-GRU tactile-only model
-    mode: tact
-
-- model: mlp-gru-vis
-  extends: mlp-gru-base
-  params:
-    desc: MLP-GRU vision-only model
-    mode: vis
-
-- model: mlp-gru-mm
-  extends: mlp-gru-base
-  params:
-    desc: MLP-GRU multi-modal model
-    mode: mm
-
-- model: cnn3d-tact
-  extends: cnn3d-base
-  params:
-    desc: CNN3D tactile-only model
-    mode: tact
-
-- model: cnn3d-vis
-  extends: cnn3d-base
-  params:
-    desc: CNN3D vision-only model
-    mode: vis
-
-- model: cnn3d-mm
-  extends: cnn3d-base
-  params:
-    desc: CNN3D multi-modal model
-    mode: mm
-
-- model: loihi-tact
-  extends: loihi-base
-  params:
-    desc: Loihi tactile-only model
-    mode: tact
-
-- model: loihi-vis
-  extends: loihi-base
-  params:
-    desc: Loihi vision-only model
-    mode: vis
-
-- model: loihi-mm
-  extends: loihi-base
-  params:
-    desc: Loihi multi-modal model
-    mode: mm

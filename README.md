@@ -94,7 +94,7 @@ For example, to run our VT-SNN tactile-only model on the Container-Weight
 classification task, run:
 
 ``` bash
-guild run vtsnn-tact:train-cw data_dir=/path/to/data
+guild run vtsnn:train-cw mode=tact data_dir=/path/to/data
 ```
 
 Visit the `vtsnn/train_*.py` files for instructions to run with vanilla Python.
@@ -107,7 +107,7 @@ To cite this work, please use:
 @inproceedings{taunyazov20event,
     title={Event-Driven Visual-Tactile Sensing and Learning for Robots}, 
     author={Tasbolat Taunyazoz and Weicong Sng and Hian Hian See and Brian Lim and Jethro Kuan and Abdul Fatir Ansari and Benjamin Tee and Harold Soh},
-    year={2020},  
+    year={2020},
     booktitle = {Proceedings of Robotics: Science and Systems}, 
     year      = {2020}, 
     month     = {July}}

@@ -1,7 +1,7 @@
 """Train the VT-SNN models
 
 1. With guild:
-guild run vtsnn-{tact,vis,mm}:train-{cw,sd}
+guild run vtsnn:train-{cw,sd} mode={tact,vis,mm} data_dir=/path/to/preprocessed/
 
 2. With vanilla Python:
 
@@ -88,6 +88,7 @@ parser.add_argument(
     choices=["NumSpikes", "WeightedNumSpikes"],
     required=True,
 )
+
 args = parser.parse_args()
 
 LOSS_TYPES = ["NumSpikes", "WeightedNumSpikes"]

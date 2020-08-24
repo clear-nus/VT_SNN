@@ -3,7 +3,7 @@
 Usage (from project root directory):
 
 1. With guild:
-guild run mlp-gru-{tact,vis,mm}:train-{cw,sd}
+guild run mlp-gru:train-{cw,sd} mode={tact,vis,mm} data_dir=/path/to/preprocessed
 
 2. With vanilla Python:
 

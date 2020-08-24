@@ -1,7 +1,7 @@
 """Train the Loihi models
 
 1. With guild:
-guild run loihi-{tact,vis,mm}:train-{cw,sd}
+guild run loihi:train-{cw,sd} mode={tact,vis,mm} data_dir=/path/to/preprocessed
 
 2. With vanilla Python:
 
