@@ -68,7 +68,7 @@ parser.add_argument(
     "--task",
     type=str,
     help="Task to preprocess for.",
-    choices=["cw", "slip"],
+    choices=["cw", "slip", "ycb"],
     required=True,
 )
 parser.add_argument("--seed", type=int, help="Random seed to use", default=100)
@@ -104,7 +104,7 @@ selections_cw = {  # index, offset, length
 
 selections_slip = {"full": [1, 0.0, 0.15]}
 
-if args.task == "cw":
+if args.task == "cw" or args.task == "ycb":
     SELECTION = selections_cw[args.selection]
     Trajectory = namedtuple(
         "Trajectory",
@@ -400,6 +400,45 @@ if args.task == "cw":
     ]
 elif args.task == "slip":
     list_of_objects2 = ["stable", "rotate"]
+elif args.task == "ycb":
+    list_of_objects2 = [
+        "003_cracker_box",
+        "004_sugar_box",
+        "006_mustard_bottle",
+        "010_potted_meat_can",
+        "040_large_marker",
+        "041_small_marker",
+        "046_plastic_bolt",
+        "061_foam_brick",
+        "065-a_cups",
+        "065-b_cups",
+        "065-c_cups",
+        "065-d_cups",
+        "065-e_cups",
+        "071_nine_hole_peg_test",
+        "072-d_toy_airplane",
+        "072-f_toy_airplane",
+        "072-i_toy_airplane",
+        "072-j_toy_airplane",
+        "073-a_lego_duplo",
+        "073-d_lego_duplo",
+        "073-h_lego_duplo",
+        "073-n_lego_duplo",
+        "073-o_lego_duplo",
+        "073-p_lego_duplo",
+        "077_rubiks_cube",
+        "101_rope",
+        "102-a_duck",
+        "102-b_duck",
+        "103-a_evian",
+        "103-b_evian",
+        "103-c_evian",
+        "104_sponge",
+        "106-a_vitasoy",
+        "106-b_vitasoy",
+        "107-a_pepsi_bottle",
+        "107-b_pepsi_bottle"
+    ]                           # 36 objects
 
 ViTac = ViTacData(Path(args.save_path), list_of_objects2, selection=SELECTION)
 

@@ -17,7 +17,7 @@ python vtsnn/train_snn.py \
  --mode tact \
  --task cw
 
-where mode is one of {tact, vis, mm} and task is {cw, slip}.
+where mode is one of {tact, vis, mm} and task is {cw, slip, ycb}.
 """
 from pathlib import Path
 import logging
@@ -64,6 +64,12 @@ parser.add_argument(
     "--hidden_size", type=int, help="Size of hidden layer.", required=True
 )
 parser.add_argument(
+    "--fingers",
+    type=str,
+    help="Which fingers to use for tactile data.",
+    choices=["left", "right", "both"],
+    required=True)
+parser.add_argument(
     "--mode",
     type=str,
     choices=["tact", "vis", "mm"],
@@ -75,7 +81,7 @@ parser.add_argument(
     "--task",
     type=str,
     help="The classification task.",
-    choices=["cw", "slip"],
+    choices=["cw", "slip", "ycb"],
     required=True,
 )
 
@@ -97,14 +103,18 @@ params = snn.params(args.network_config)
 
 if args.task == "cw":
     output_size = 20
-else:  # Slip
+elif args.task == "slip":
     output_size = 2
+elif args.task == "ycb":
+    output_size = 36
+else:
+    raise ValueError("Invalid args.task")
 
 if args.mode == "tact":
     model = SlayerMLP
     model_args = {
         "params": params,
-        "input_size": 156,
+        "input_size": 156 if args.fingers == "both" else 78,
         "hidden_size": args.hidden_size,
         "output_size": output_size,
     }
@@ -120,7 +130,7 @@ else:  # NOTE: args.hidden_size unused here
     model = SlayerMM
     model_args = {
         "params": params,
-        "tact_input_size": 156,
+        "tact_input_size": 156 if args.fingers == "both" else 78,
         "vis_input_size": (50, 63, 2),
         "tact_output_size": 50,
         "vis_output_size": 10,
@@ -149,6 +159,7 @@ train_dataset = ViTacDataset(
     output_size=output_size,
     spiking=True,
     mode=args.mode,
+    fingers=args.fingers
 )
 train_loader = DataLoader(
     dataset=train_dataset,
@@ -162,6 +173,7 @@ test_dataset = ViTacDataset(
     output_size=output_size,
     spiking=True,
     mode=args.mode,
+    fingers=args.fingers
 )
 test_loader = DataLoader(
     dataset=test_dataset,

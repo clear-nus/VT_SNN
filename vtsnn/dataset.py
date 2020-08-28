@@ -20,6 +20,7 @@ class ViTacDataset(Dataset):
         rectangular=False,
         loihi=False,
         size=None,
+        fingers=None
     ):
         self.path = path
         self.size = size
@@ -35,6 +36,11 @@ class ViTacDataset(Dataset):
                 self.left_tact = torch.load(Path(path) / "tac_left.pt")
             else:
                 tact = torch.load(Path(path) / "tact.pt")
+                if fingers == "left":
+                    tact = tact[:, :39, :, :]
+                elif fingers == "right":
+                    tact = tact[:, 39:, :, :]
+
                 self.tact = tact.reshape(
                     tact.shape[0], -1, 1, 1, tact.shape[-1]
                 )

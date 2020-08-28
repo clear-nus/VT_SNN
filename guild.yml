@@ -24,6 +24,23 @@
         n_sample_per_object: 40
         network_config: network_config/container_weight.yml
         task: cw
+    preprocess-ycb:
+      description: Preprocess raw data for YCB multi-modal dataset.
+      main: vtsnn.preprocess
+      requires:
+        - config
+      flags:
+        save_path:
+          required: true
+        data_path:
+          required: true
+        tact_threshold: 0
+        vis_threshold: 1
+        selection: grasp_lift_hold
+        bin_duration: 0.02
+        n_sample_per_object: 25
+        network_config: network_config/ycb.yml
+        task: ycb
     preprocess-slip:
       description: Preprocess raw data for Slip Detection.
       main: vtsnn.preprocess
@@ -82,6 +99,7 @@
         mode:
           required: true
         task: cw
+        fingers: both
       compare:
         - =batch_size
         - =epochs
@@ -113,6 +131,7 @@
         mode:
           required: true
         task: slip
+        fingers: both
       compare:
         - =batch_size
         - =epochs
@@ -121,6 +140,38 @@
         - =hidden_size
         - =loss
         - loss/train as loss_train        
+        - loss/test as loss_test
+        - acc/train as acc_train        
+        - acc/test as acc_test
+        - max acc/train as max_acc_train
+        - max acc/test as max_acc_test
+    train-ycb:
+      description: Train the VT-SNN model on the YCB dataset
+      main: vtsnn.train_snn
+      requires:
+        - config
+      flags:
+        epochs: 500
+        lr: 0.001
+        sample_file: 1
+        batch_size: 8
+        data_dir:
+          required: true
+        network_config: network_config/ycb.yml
+        hidden_size: 32
+        loss: NumSpikes
+        mode:
+          required: true
+        task: ycb
+        fingers: both
+      compare:
+        - =batch_size
+        - =epochs
+        - =lr
+        - =sample_file
+        - =hidden_size
+        - =loss
+        - loss/train as loss_train
         - loss/test as loss_test
         - acc/train as acc_train        
         - acc/test as acc_test
