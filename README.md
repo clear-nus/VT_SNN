@@ -106,7 +106,7 @@ To cite this work, please use:
 ``` text
 @inproceedings{taunyazov20event,
     title={Event-Driven Visual-Tactile Sensing and Learning for Robots}, 
-    author={Tasbolat Taunyazoz and Weicong Sng and Hian Hian See and Brian Lim and Jethro Kuan and Abdul Fatir Ansari and Benjamin Tee and Harold Soh},
+    author={Tasbolat Taunyazov and Weicong Sng and Hian Hian See and Brian Lim and Jethro Kuan and Abdul Fatir Ansari and Benjamin Tee and Harold Soh},
     year={2020},
     booktitle = {Proceedings of Robotics: Science and Systems}, 
     year      = {2020}, 
